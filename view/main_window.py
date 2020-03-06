@@ -1,0 +1,143 @@
+from PyQt5 import QtWidgets, QtCore, QtGui
+
+
+class MainWindow(QtWidgets.QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.initUi()
+
+    def initUi(self):
+        self.setObjectName('MainWindow')
+        self.resize(800, 654)
+
+        # Tools setup
+        self.tools_menu_box = QtWidgets.QGroupBox(self)
+        self.tools_menu_box.setGeometry(QtCore.QRect(10, 20, 171, 561))
+        self.tools_menu_box.setTitle("Tools Menu")
+
+        self.objects_list_view = QtWidgets.QListView(self.tools_menu_box)
+        self.objects_list_view.setGeometry(QtCore.QRect(10, 50, 151, 121))
+
+        self.window_lbl = QtWidgets.QLabel(self.tools_menu_box)
+        self.window_lbl.setGeometry(QtCore.QRect(10, 180, 71, 16))
+        self.window_lbl.setText("Window")
+
+        self.in_btn = QtWidgets.QPushButton(self.tools_menu_box)
+        self.in_btn.setGeometry(QtCore.QRect(100, 230, 31, 23))
+        self.in_btn.setText("In")
+
+        self.zoom_in_btn = QtWidgets.QPushButton(self.tools_menu_box)
+        self.zoom_in_btn.setGeometry(QtCore.QRect(70, 420, 31, 23))
+        self.zoom_in_btn.setText("+")
+
+        self.step_lbl = QtWidgets.QLabel(self.tools_menu_box)
+        self.step_lbl.setGeometry(QtCore.QRect(10, 200, 31, 16))
+        self.step_lbl.setText("Step:")
+
+        self.view_left_btn = QtWidgets.QPushButton(self.tools_menu_box)
+        self.view_left_btn.setGeometry(QtCore.QRect(50, 250, 41, 23))
+        self.view_left_btn.setText("Left")
+
+        self.step_pct_lbl = QtWidgets.QLabel(self.tools_menu_box)
+        self.step_pct_lbl.setGeometry(QtCore.QRect(100, 200, 21, 16))
+        self.step_pct_lbl.setText("%")
+
+        self.degrees_lbl = QtWidgets.QLabel(self.tools_menu_box)
+        self.degrees_lbl.setGeometry(QtCore.QRect(10, 330, 57, 15))
+        self.degrees_lbl.setText("Dregrees")
+
+        self.view_up_btn = QtWidgets.QPushButton(self.tools_menu_box)
+        self.view_up_btn.setGeometry(QtCore.QRect(30, 230, 41, 23))
+        self.view_up_btn.setText("Up")
+
+        self.rotate_lbl = QtWidgets.QLabel(self.tools_menu_box)
+        self.rotate_lbl.setGeometry(QtCore.QRect(10, 310, 57, 15))
+        self.rotate_lbl.setText("Rotate")
+
+        self.degrees_input = QtWidgets.QLineEdit(self.tools_menu_box)
+        self.degrees_input.setGeometry(QtCore.QRect(70, 330, 41, 23))
+
+        self.zoom_out_btn = QtWidgets.QPushButton(self.tools_menu_box)
+        self.zoom_out_btn.setGeometry(QtCore.QRect(20, 420, 31, 23))
+        self.zoom_out_btn.setText("-")
+
+        self.set_window_btn = QtWidgets.QPushButton(self.tools_menu_box)
+        self.set_window_btn.setGeometry(QtCore.QRect(20, 450, 80, 23))
+        self.set_window_btn.setText("Set Window")
+
+        self.degrees_unit_lbl = QtWidgets.QLabel(self.tools_menu_box)
+        self.degrees_unit_lbl.setGeometry(QtCore.QRect(120, 330, 16, 16))
+        self.degrees_unit_lbl.setText("º")
+
+        self.view_right_btn = QtWidgets.QPushButton(self.tools_menu_box)
+        self.view_right_btn.setGeometry(QtCore.QRect(10, 250, 41, 23))
+        self.view_right_btn.setText("Right")
+
+        self.step_input = QtWidgets.QLineEdit(self.tools_menu_box)
+        self.step_input.setGeometry(QtCore.QRect(50, 200, 41, 23))
+
+        self.zoom_lbl = QtWidgets.QLabel(self.tools_menu_box)
+        self.zoom_lbl.setGeometry(QtCore.QRect(30, 400, 57, 15))
+        self.zoom_lbl.setText("Zoom")
+
+        self.view_down_btn = QtWidgets.QPushButton(self.tools_menu_box)
+        self.view_down_btn.setGeometry(QtCore.QRect(30, 270, 41, 23))
+        self.view_down_btn.setText("Down")
+
+        self.out_btn = QtWidgets.QPushButton(self.tools_menu_box)
+        self.out_btn.setGeometry(QtCore.QRect(100, 270, 31, 23))
+        self.out_btn.setText("Out")
+
+        self.objects_lbl = QtWidgets.QLabel(self.tools_menu_box)
+        self.objects_lbl.setGeometry(QtCore.QRect(10, 30, 57, 15))
+        self.objects_lbl.setText("Objects")
+
+        self.projection_lbl = QtWidgets.QLabel(self.tools_menu_box)
+        self.projection_lbl.setGeometry(QtCore.QRect(10, 490, 81, 16))
+        self.projection_lbl.setText("Projection")
+
+        self.paralel_radio_btn = QtWidgets.QRadioButton(self.tools_menu_box)
+        self.paralel_radio_btn.setGeometry(QtCore.QRect(10, 510, 99, 21))
+        self.paralel_radio_btn.setText("Paralel")
+
+        self.perspective_radio_btn = QtWidgets.QRadioButton(
+            self.tools_menu_box)
+        self.perspective_radio_btn.setGeometry(QtCore.QRect(10, 530, 99, 21))
+        self.perspective_radio_btn.setText("Perspective")
+
+        self.rotate_x_btn = QtWidgets.QPushButton(self.tools_menu_box)
+        self.rotate_x_btn.setGeometry(QtCore.QRect(20, 370, 31, 23))
+        self.rotate_x_btn.setText("X")
+
+        self.rotate_y_btn = QtWidgets.QPushButton(self.tools_menu_box)
+        self.rotate_y_btn.setGeometry(QtCore.QRect(60, 370, 31, 23))
+        self.rotate_y_btn.setText("Y")
+
+        self.rotate_z_btn = QtWidgets.QPushButton(self.tools_menu_box)
+        self.rotate_z_btn.setGeometry(QtCore.QRect(100, 370, 31, 23))
+        self.rotate_z_btn.setText("Z")
+
+        # Canvas setup
+        self.canvas = QtWidgets.QLabel(self)
+        self.canvas.setGeometry(QtCore.QRect(190, 20, 601, 551))
+        self.canvas.setText("")
+        self.canvas.setObjectName("canvas")
+
+        qp = QtGui.QPainter()
+        qp.begin(self)
+
+        # Setting up menu bar
+        self.menubar = QtWidgets.QMenuBar(self)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 20))
+
+        self.menuFile = QtWidgets.QMenu(self.menubar)
+        self.menuFile.setTitle("File")
+        self.setMenuBar(self.menubar)
+
+        self.actionAdd_object = QtWidgets.QAction(self)
+        self.actionAdd_object.setText("Add object")
+
+        self.menubar.addAction(self.menuFile.menuAction())
+        self.menuFile.addAction(self.actionAdd_object)
+
