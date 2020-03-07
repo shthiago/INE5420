@@ -76,10 +76,21 @@ class Controller:
 
         # Create object with a factory, that will identify object type based
         # on active tab, take its values and return object
-        new_object = new_object_factory(obj_name, tab_name, tab)
+        status, new_object = new_object_factory(obj_name, tab_name, tab)
 
-        self.add_object_to_list(new_object)
-        self.add_object_dialog.setVisible(False)
+        if status['done']:
+            self.add_object_to_list(new_object)
+            self.add_object_dialog.reset_values()
+            self.add_object_dialog.setVisible(False)
+
+        else:
+            QMessageBox.information(
+                self.add_object_dialog,
+                'Error while creating object',
+                status['error_msg'],
+                QMessageBox.Ok
+            )
+            return
 
     def validate_new_name(self, name):
         """
