@@ -19,6 +19,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.objects_list_view = QtWidgets.QListView(self.tools_menu_box)
         self.objects_list_view.setGeometry(QtCore.QRect(10, 50, 151, 121))
 
+        self.items_model = QtGui.QStandardItemModel()
+        self.objects_list_view.setModel(self.items_model)
+
         self.window_lbl = QtWidgets.QLabel(self.tools_menu_box)
         self.window_lbl.setGeometry(QtCore.QRect(10, 180, 71, 16))
         self.window_lbl.setText("Window")
@@ -57,6 +60,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.degrees_input = QtWidgets.QLineEdit(self.tools_menu_box)
         self.degrees_input.setGeometry(QtCore.QRect(70, 330, 41, 23))
+        self.degrees_input.setValidator(QtGui.QIntValidator(0, 360))
 
         self.zoom_out_btn = QtWidgets.QPushButton(self.tools_menu_box)
         self.zoom_out_btn.setGeometry(QtCore.QRect(20, 420, 31, 23))
@@ -76,6 +80,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.step_input = QtWidgets.QLineEdit(self.tools_menu_box)
         self.step_input.setGeometry(QtCore.QRect(50, 200, 41, 23))
+        self.step_input.setValidator(QtGui.QIntValidator(0, 100))
 
         self.zoom_lbl = QtWidgets.QLabel(self.tools_menu_box)
         self.zoom_lbl.setGeometry(QtCore.QRect(30, 400, 57, 15))
@@ -140,4 +145,3 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.menubar.addAction(self.menuFile.menuAction())
         self.menuFile.addAction(self.actionAdd_object)
-
