@@ -273,5 +273,4 @@ class WireframeTab(QtWidgets.QWidget):
         """
         Reset inputs to empty value
         """
-        # No actions needed
-        pass
+        self.points_model.clear()
