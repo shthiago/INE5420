@@ -1,4 +1,5 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5.QtCore import Qt
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -145,3 +146,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.menubar.addAction(self.menuFile.menuAction())
         self.menuFile.addAction(self.actionAdd_object)
+
+
+        qp.setPen(Qt.red)
+
+        qp.drawPoint(10, 10)
+        qp.drawPoint(10, 11)
+        qp.drawPoint(10, 12)
+        qp.drawPoint(10, 13)
+        qp.drawPoint(10, 14)
+        qp.drawPoint(10, 15)
+        qp.drawPoint(10, 16)
+
+        qp.end()

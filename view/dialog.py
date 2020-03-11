@@ -288,7 +288,6 @@ class WireframeTab(QtWidgets.QWidget):
         
 
     def add_point_btn_clicked(self):
-        print("entrou")
         self.dialog = QtWidgets.QDialog(self)
         self.dialog.setWindowTitle('Add point to wireframe')
         form = QtWidgets.QFormLayout(self.dialog)
