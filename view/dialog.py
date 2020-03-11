@@ -38,8 +38,8 @@ class NewObjectDialog(QtWidgets.QDialog):
         self.tab_panel.addTab(self.line_tab, "Line")
 
         # Add wireframe mechanism
-        self.line_tab = WireframeTab()
-        self.tab_panel.addTab(self.line_tab, "Wireframe")
+        self.wireframe_tab = WireframeTab()
+        self.tab_panel.addTab(self.wireframe_tab, "Wireframe")
 
         self.tab_panel.setCurrentIndex(0)
 
@@ -53,7 +53,11 @@ class NewObjectDialog(QtWidgets.QDialog):
         # Reset inputs for line
         self.line_tab.reset_values()
 
+        # Reset input for point
         self.point_tab.reset_values()
+
+        # Reset input for wireframe
+        self.wireframe_tab.reset_values()
 
     def active_tab(self):
         """

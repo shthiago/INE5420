@@ -6,6 +6,7 @@ from view.main_window import MainWindow
 from view.dialog import NewObjectDialog
 from view.object_item import ObjectItem
 from model import new_object_factory
+from model.objects import Point3D, Line, Wireframe
 
 
 class Controller:
@@ -28,6 +29,18 @@ class Controller:
         self.add_object_dialog.show()
         self.add_object_dialog.setVisible(False)
         self.add_dialog_handlers()
+
+        # Initial window settings
+        self.window_xmin = 0
+        self.window_ymin = 0
+        self.window_xmax = 600
+        self.window_ymax = 600
+
+        # Viewport values
+        self.xvp_min = 0
+        self.yvp_min = 0
+        self.xvp_max = 600
+        self.yvp_max = 600
 
     def run(self):
         """
@@ -82,6 +95,7 @@ class Controller:
             self.add_object_to_list(new_object)
             self.add_object_dialog.reset_values()
             self.add_object_dialog.setVisible(False)
+            self.process_viewport()
 
         else:
             QMessageBox.information(
@@ -138,6 +152,47 @@ class Controller:
 
         item = ObjectItem(object)
         self.main_window.items_model.appendRow(item)
+
+    def process_viewport(self):
+        """
+        Function to create the window that will be drew into viewport
+        """
+
+        # TODO
+        # Process what is inside viewport, cuting what should not be drew
+        # setting new points and just pass to viewport what it should draw
+        transformed_groups_of_points = []
+        for obj in self.objects_list:
+            if isinstance(obj, Point3D):
+                transformed_groups_of_points.append(self.transform_point(obj))
+
+            else:
+                pts = []
+                for p in obj.points:
+                    pts.append(self.transform_point(p))
+
+                transformed_groups_of_points.append(pts)
+
+        self.main_window.viewport.draw_objects(transformed_groups_of_points)
+
+    def transform_point(self, p: Point3D):
+        xw = p.x
+        yw = p.y
+
+        xwmax = self.window_xmax
+        ywmax = self.window_ymax
+        xwmin = self.window_xmin
+        ywmin = self.window_ymin
+
+        xvpmax = self.xvp_max
+        yvpmax = self.yvp_max
+        xvpmin = self.xvp_min
+        yvpmin = self.yvp_min
+
+        xvp = ((xw - xwmin)/(xwmax - xwmin)) * (xvpmax - xvpmin)
+        yvp = (1 - ((yw - ywmin)/(ywmax - ywmin))) * (yvpmax - yvpmin)
+
+        return (xvp, yvp)
 
 
 if __name__ == '__main__':
