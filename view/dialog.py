@@ -162,6 +162,10 @@ class PointTab(QtWidgets.QWidget):
         self.z_lbl_pt.setGeometry(QtCore.QRect(160, 30, 21, 16))
         self.z_lbl_pt.setText("Z")
 
+        self.y_lbl_pt = QtWidgets.QLabel(self)
+        self.y_lbl_pt.setGeometry(QtCore.QRect(90, 30, 21, 16))
+        self.y_lbl_pt.setText("Y")
+
         self.x_lbl_pt = QtWidgets.QLabel(self)
         self.x_lbl_pt.setGeometry(QtCore.QRect(20, 30, 21, 16))
         self.x_lbl_pt.setText("X")
@@ -181,10 +185,6 @@ class PointTab(QtWidgets.QWidget):
         self.z_coord_pt_input = QtWidgets.QLineEdit(self)
         self.z_coord_pt_input.setGeometry(QtCore.QRect(150, 50, 41, 23))
         self.z_coord_pt_input.setValidator(self.numeric_validator)
-
-        self.y_lbl_pt = QtWidgets.QLabel(self)
-        self.y_lbl_pt.setGeometry(QtCore.QRect(90, 30, 21, 16))
-        self.y_lbl_pt.setText("Y")
 
     def reset_values(self):
         """
@@ -206,6 +206,8 @@ class WireframeTab(QtWidgets.QWidget):
         # TODO
         # Continue from here
         # Check how to input wireframe from interface
+        # Insert rule that it can only be added if there are 3+ points
+
         self.points_list = []
 
         self.numeric_validator = QtGui.QIntValidator(0, 1000)
@@ -216,13 +218,77 @@ class WireframeTab(QtWidgets.QWidget):
         self.points_model = QtGui.QStandardItemModel()
         self.points_view.setModel(self.points_model)
 
+        # Create input fields
+        # form = QtWidgets.QFormLayout(self)
+        # self.x_input = QtWidgets.QLineEdit(self)
+        # self.x_input.setGeometry(QtCore.QRect(10, 20, 41, 23))
+        # self.x_input.setValidator(self.numeric_validator)
+        # form.addRow(QtWidgets.QLabel('X:'), self.x_input)
+        # self.y_input = QtWidgets.QLineEdit(self)
+        # self.y_input.setGeometry(QtCore.QRect(10, 40, 41, 23))
+        # self.y_input.setValidator(self.numeric_validator)
+        # form.addRow(QtWidgets.QLabel('Y:'), self.y_input)
+        # self.z_input = QtWidgets.QLineEdit(self)
+        # self.x_input.setGeometry(QtCore.QRect(10, 60, 41, 23))
+        # self.z_input.setValidator(self.numeric_validator)
+        # form.addRow(QtWidgets.QLabel('Z:'), self.z_input)
+
+        self.x_lbl_pt = QtWidgets.QLabel(self)
+        self.x_lbl_pt.setGeometry(QtCore.QRect(30, 10, 21, 16))
+        self.x_lbl_pt.setText("X")
+
+        self.y_lbl_pt = QtWidgets.QLabel(self)
+        self.y_lbl_pt.setGeometry(QtCore.QRect(30, 50, 21, 16))
+        self.y_lbl_pt.setText("Y")
+
+        self.z_lbl_pt = QtWidgets.QLabel(self)
+        self.z_lbl_pt.setGeometry(QtCore.QRect(30, 90, 21, 16))
+        self.z_lbl_pt.setText("Z")
+
+        self.x_coord_pt_input = QtWidgets.QLineEdit(self)
+        self.x_coord_pt_input.setGeometry(QtCore.QRect(50, 10, 41, 23))
+        self.x_coord_pt_input.setValidator(self.numeric_validator)
+
+        self.y_coord_pt_input = QtWidgets.QLineEdit(self)
+        self.y_coord_pt_input.setGeometry(QtCore.QRect(50, 50, 41, 23))
+        self.y_coord_pt_input.setValidator(self.numeric_validator)
+
+        self.z_coord_pt_input = QtWidgets.QLineEdit(self)
+        self.z_coord_pt_input.setGeometry(QtCore.QRect(50, 90, 41, 23))
+        self.z_coord_pt_input.setValidator(self.numeric_validator)
+
         self.add_point_btn = QtWidgets.QPushButton(self)
-        self.add_point_btn.setGeometry(QtCore.QRect(30, 50, 100, 50))
+        self.add_point_btn.setGeometry(QtCore.QRect(30, 130, 100, 40))
         self.add_point_btn.setText('Add point')
 
-        self.add_point_btn.clicked.connect(self.add_point_btn_clicked)
+        #self.add_point_btn.clicked.connect(self.add_point_btn_clicked)
+
+        self.add_point_btn.clicked.connect(self.__add_input_values_to_list)
+    
+    def __add_input_values_to_list(self):
+
+        try:
+            x = int(self.x_coord_pt_input.text())
+            y = int(self.y_coord_pt_input.text())
+            z = int(self.z_coord_pt_input.text())
+        except ValueError as e:
+            QtWidgets.QMessageBox.information(
+                self,
+                'Error while creating point',
+                str(e),
+                QtWidgets.QMessageBox.Ok
+            )
+            return
+
+        self.reset_values
+        self.points_list.append((x, y, z))
+        item = QtGui.QStandardItem(f'({x}, {y}, {z})')
+        item.setEditable(False)
+        self.points_model.appendRow(item)
+        
 
     def add_point_btn_clicked(self):
+        print("entrou")
         self.dialog = QtWidgets.QDialog(self)
         self.dialog.setWindowTitle('Add point to wireframe')
         form = QtWidgets.QFormLayout(self.dialog)
@@ -247,31 +313,12 @@ class WireframeTab(QtWidgets.QWidget):
         btn_box.accepted.connect(self.__add_input_values_to_list)
         btn_box.rejected.connect(self.dialog.close)
         form.addRow(btn_box)
-        self.dialog.exec()
-
-    def __add_input_values_to_list(self):
-        try:
-            x = int(self.x_input.text())
-            y = int(self.y_input.text())
-            z = int(self.z_input.text())
-        except ValueError as e:
-            QtWidgets.QMessageBox.information(
-                self,
-                'Error while creating point',
-                str(e),
-                QtWidgets.QMessageBox.Ok
-            )
-            return
-
-        self.points_list.append((x, y, z))
-        item = QtGui.QStandardItem(f'({x}, {y}, {z})')
-        item.setEditable(False)
-        self.points_model.appendRow(item)
-        self.dialog.close()
 
     def reset_values(self):
         """
         Reset inputs to empty value
         """
-        # No actions needed
-        pass
+
+        self.x_coord_pt_input.clear()
+        self.y_coord_pt_input.clear()
+        self.z_coord_pt_input.clear()
