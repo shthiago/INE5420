@@ -32,6 +32,13 @@ class ViewPort(QtWidgets.QLabel):
         objects: list
             List of objects to be draw
         """
+        for obj in objects:
+            if not isinstance(obj, list):
+                raise ValueError('Invalid object to be drawn')
+
+            for point in obj:
+                if len(point) != 2:
+                    raise ValueError('Invalid object to be drawn')
 
         self.objects = objects
         self.update()
@@ -39,7 +46,10 @@ class ViewPort(QtWidgets.QLabel):
     def paintEvent(self, e):
         qp = QtGui.QPainter()
         qp.begin(self)
-        qp.setPen(QtGui.QColor(0, 0, 0))
+        pen = QtGui.QPen()
+        pen.setWidth(3)
+        pen.setColor(QtGui.QColor(0, 0, 0))
+        qp.setPen(pen)
         for obj in self.objects:
             # In case it is a point
             if len(obj) == 1:

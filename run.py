@@ -137,13 +137,74 @@ class Controller:
         self.main_window.out_btn.clicked.connect(
             lambda: self.zoom_handler('out'))
 
+        self.main_window.view_up_btn.clicked.connect(
+            lambda: self.window_move_handler('up'))
+
+        self.main_window.view_down_btn.clicked.connect(
+            lambda: self.window_move_handler('down'))
+
+        self.main_window.view_left_btn.clicked.connect(
+            lambda: self.window_move_handler('left'))
+
+        self.main_window.view_right_btn.clicked.connect(
+            lambda: self.window_move_handler('right'))
+
+    def window_move_handler(self, mode: str):
+        """
+        Take step value from input and apply window movementation
+
+        Parameters
+        ----------
+        mode: str
+            'right', 'left', 'up', 'down'
+        """
+        if mode not in ['right', 'left', 'up', 'down']:
+            raise ValueError(
+                f'Invalid mode. Receivevd {mode}')
+
+        try:
+            step = int(self.main_window.step_input.text())
+        except ValueError:
+            QMessageBox.information(
+                self.add_object_dialog,
+                'Error',
+                'Step value invalid',
+                QMessageBox.Ok
+            )
+            return
+
+        window_size_x = self.window_xmax - self.window_xmin
+        window_size_y = self.window_ymax - self.window_ymin
+        offsetx = window_size_x * step/100
+        offsety = window_size_y * step/100
+
+        if mode == 'up':
+            self.yvp_max += offsety
+            self.yvp_min += offsety
+
+        elif mode == 'down':
+            self.yvp_max -= offsety
+            self.yvp_min -= offsety
+
+        elif mode == 'right':
+            self.xvp_max -= offsetx
+            self.xvp_min -= offsetx
+
+        elif mode == 'left':
+            self.xvp_max += offsetx
+            self.xvp_min += offsetx
+
+        self.process_viewport()
+
     def zoom_handler(self, mode: str):
         """
         Take step value from input and apply zoom
 
-        Paramters:
+        Paramters
+        ----------
         mode: str
             'in' or 'out'
+
         """
         if mode not in ['in', 'out']:
             raise ValueError(
@@ -237,8 +298,9 @@ class Controller:
         xvpmin = self.xvp_min
         yvpmin = self.yvp_min
 
-        xvp = ((xw - xwmin)/(xwmax - xwmin)) * (xvpmax - xvpmin)
-        yvp = (1 - ((yw - ywmin)/(ywmax - ywmin))) * (yvpmax - yvpmin)
+        xvp = ((xw - xwmin)/(xwmax - xwmin)) * (xvpmax - xvpmin) - self.xvp_min
+        yvp = (1 - ((yw - ywmin)/(ywmax - ywmin))) * \
+            (yvpmax - yvpmin) - self.yvp_min
 
         return (xvp, yvp)
 
