@@ -131,6 +131,46 @@ class Controller:
         self.main_window.actionAdd_object.triggered.connect(
             self.add_object_handler)
 
+        self.main_window.in_btn.clicked.connect(
+            lambda: self.zoom_handler('in'))
+
+        self.main_window.out_btn.clicked.connect(
+            lambda: self.zoom_handler('out'))
+
+    def zoom_handler(self, mode: str):
+        """
+        Take step value from input and apply zoom
+
+        Paramters:
+        mode: str
+            'in' or 'out'
+        """
+        if mode not in ['in', 'out']:
+            raise ValueError(
+                f'Invalid mode. Expect in or out, receivevd {mode}')
+        try:
+            step = int(self.main_window.step_input.text())
+        except ValueError:
+            QMessageBox.information(
+                self.add_object_dialog,
+                'Error',
+                'Step value invalid',
+                QMessageBox.Ok
+            )
+            return
+
+        # Process step in pct
+        if mode == 'in':
+            self.window_xmax *= (1 - step/100)
+            self.window_ymax *= (1 - step/100)
+
+        elif mode == 'out':
+            self.window_xmax *= (1 + step/100)
+            self.window_ymax *= (1 + step/100)
+
+        # Update objects on viewport
+        self.process_viewport()
+
     def create_unique_obj_name(self, tab_name):
         """
         Create unique obj name based on first two letter of tab + number
@@ -157,10 +197,6 @@ class Controller:
         """
         Function to create the window that will be drew into viewport
         """
-
-        # TODO
-        # Process what is inside viewport, cuting what should not be drew
-        # setting new points and just pass to viewport what it should draw
         transformed_groups_of_points = []
         for obj in self.objects_list:
             if isinstance(obj, Point3D):
@@ -176,6 +212,17 @@ class Controller:
         self.main_window.viewport.draw_objects(transformed_groups_of_points)
 
     def transform_point(self, p: Point3D):
+        """
+        Apply viewport transformation to a point
+
+        Parameters
+        ----------
+        p: Point3D
+
+        Return
+        ----------
+        (x, y) transformed to current viewport
+        """
         xw = p.x
         yw = p.y
 

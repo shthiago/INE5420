@@ -61,6 +61,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rotate_lbl.setText("Rotate")
 
         self.degrees_input = QtWidgets.QLineEdit(self.tools_menu_box)
+        self.degrees_input.setText('0')
         self.degrees_input.setGeometry(QtCore.QRect(70, 330, 41, 23))
         self.degrees_input.setValidator(QtGui.QIntValidator(0, 360))
 
@@ -81,8 +82,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view_right_btn.setText("Right")
 
         self.step_input = QtWidgets.QLineEdit(self.tools_menu_box)
+        self.step_input.setText('10')
         self.step_input.setGeometry(QtCore.QRect(50, 200, 41, 23))
-        self.step_input.setValidator(QtGui.QIntValidator(0, 100))
+        self.step_input.setValidator(QtGui.QIntValidator(0, 99))
 
         self.zoom_lbl = QtWidgets.QLabel(self.tools_menu_box)
         self.zoom_lbl.setGeometry(QtCore.QRect(30, 400, 57, 15))
