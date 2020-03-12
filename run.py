@@ -200,7 +200,8 @@ class Controller:
         transformed_groups_of_points = []
         for obj in self.objects_list:
             if isinstance(obj, Point3D):
-                transformed_groups_of_points.append(self.transform_point(obj))
+                transformed_groups_of_points.append(
+                    [self.transform_point(obj)])
 
             else:
                 pts = []

@@ -43,7 +43,7 @@ class ViewPort(QtWidgets.QLabel):
         for obj in self.objects:
             # In case it is a point
             if len(obj) == 1:
-                x, y = obj
+                x, y = obj[0]
                 qp.drawPoint(x, y)
 
             else:
