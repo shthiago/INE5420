@@ -251,7 +251,7 @@ class WireframeTab(QtWidgets.QWidget):
         self.add_point_btn.setText('Add point')
 
         self.add_point_btn.clicked.connect(self.__add_input_values_to_list)
-    
+
     def __add_input_values_to_list(self):
 
         try:
@@ -272,33 +272,6 @@ class WireframeTab(QtWidgets.QWidget):
         item = QtGui.QStandardItem(f'({x}, {y}, {z})')
         item.setEditable(False)
         self.points_model.appendRow(item)
-        
-
-    def add_point_btn_clicked(self):
-        self.dialog = QtWidgets.QDialog(self)
-        self.dialog.setWindowTitle('Add point to wireframe')
-        form = QtWidgets.QFormLayout(self.dialog)
-
-        # Create input fields
-        self.x_input = QtWidgets.QLineEdit(self.dialog)
-        self.x_input.setValidator(self.numeric_validator)
-        form.addRow(QtWidgets.QLabel('X:'), self.x_input)
-        self.y_input = QtWidgets.QLineEdit(self.dialog)
-        self.y_input.setValidator(self.numeric_validator)
-        form.addRow(QtWidgets.QLabel('Y:'), self.y_input)
-        self.z_input = QtWidgets.QLineEdit(self.dialog)
-        self.z_input.setValidator(self.numeric_validator)
-        form.addRow(QtWidgets.QLabel('Z:'), self.z_input)
-
-        # Create buttons
-        btn_box = QtWidgets.QDialogButtonBox(self.dialog)
-        btn_box.setStandardButtons(
-            QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
-
-        # Set actions for buttons
-        btn_box.accepted.connect(self.__add_input_values_to_list)
-        btn_box.rejected.connect(self.dialog.close)
-        form.addRow(btn_box)
 
     def reset_values(self):
         """
@@ -308,3 +281,4 @@ class WireframeTab(QtWidgets.QWidget):
         self.x_coord_pt_input.clear()
         self.y_coord_pt_input.clear()
         self.z_coord_pt_input.clear()
+        self.points_model.clear()
