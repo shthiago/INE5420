@@ -272,6 +272,9 @@ class WireframeTab(QtWidgets.QWidget):
         item = QtGui.QStandardItem(f'({x}, {y}, {z})')
         item.setEditable(False)
         self.points_model.appendRow(item)
+        self.x_coord_pt_input.clear()
+        self.y_coord_pt_input.clear()
+        self.z_coord_pt_input.clear()
 
     def reset_values(self):
         """
