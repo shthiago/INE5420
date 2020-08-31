@@ -20,10 +20,10 @@ class NewObjectDialog(QtWidgets.QDialog):
 
         self.name_lbl = QtWidgets.QLabel(self)
         self.name_lbl.setGeometry(QtCore.QRect(10, 10, 41, 16))
+        self.name_lbl.setText("Name:")
 
         self.name_input = QtWidgets.QLineEdit(self)
         self.name_input.setGeometry(QtCore.QRect(60, 10, 311, 23))
-        self.name_lbl.setText("Name:")
 
         self.tab_panel = QtWidgets.QTabWidget(self)
         self.tab_panel.setEnabled(True)
@@ -207,11 +207,6 @@ class WireframeTab(QtWidgets.QWidget):
 
     def __init__(self):
         super().__init__()
-        # TODO
-        # Continue from here
-        # Check how to input wireframe from interface
-        # Insert rule that it can only be added if there are 3+ points
-
         self.points_list = []
 
         self.numeric_validator = QtGui.QIntValidator(0, 1000)
@@ -285,3 +280,216 @@ class WireframeTab(QtWidgets.QWidget):
         self.y_coord_pt_input.clear()
         self.z_coord_pt_input.clear()
         self.points_model.clear()
+        self.points_list.clear()
+
+
+# Transformation dialog items
+class TransformationDialog(QtWidgets.QDialog):
+    """
+    Window to input transformations to points
+    """
+
+    def __init__(self):
+        super().__init__()
+
+        self.numeric_validator = QtGui.QIntValidator(0, 1000)
+
+        self.initUi()
+
+    def initUi(self):
+        self.resize(400, 300)
+        self.setWindowTitle("Apply transformation")
+        self.buttonBox = QtWidgets.QDialogButtonBox(self)
+        self.buttonBox.setGeometry(QtCore.QRect(130, 260, 171, 32))
+        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.buttonBox.setStandardButtons(
+            QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+
+        self.name_lbl = QtWidgets.QLabel(self)
+        self.name_lbl.setGeometry(QtCore.QRect(10, 10, 110, 16))
+        self.name_lbl.setText("Modifying object:")
+
+        self.target_obj_lbl = QtWidgets.QLabel(self)
+        self.target_obj_lbl.setGeometry(QtCore.QRect(120, 10, 350, 16))
+
+        self.tab_panel = QtWidgets.QTabWidget(self)
+        self.tab_panel.setEnabled(True)
+        self.tab_panel.setGeometry(QtCore.QRect(10, 50, 370, 200))
+
+        self.rotate_tab = RotateTab()
+        self.tab_panel.addTab(self.rotate_tab, 'Rotate')
+
+        self.move_tab = MoveTab()
+        self.tab_panel.addTab(self.move_tab, 'Move')
+
+        self.rescale_tab = RescaleTab()
+        self.tab_panel.addTab(self.rescale_tab, 'Rescale')
+
+    def set_target_object(self, text):
+        """
+        Set text after "Modifying object"
+        """
+
+        self.target_obj_lbl.setText(text)
+
+
+class MoveTab(QtWidgets.QWidget):
+    """
+    Tab for input values to move a object
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.points_list = []
+
+        self.numeric_validator = QtGui.QIntValidator(0, 10000)
+
+        # Label to indicate current operation
+        self.option_label = QtWidgets.QLabel(self)
+        self.option_label.setGeometry(QtCore.QRect(160, 20, 180, 20))
+
+        self.absolut_point_radio_btn = QtWidgets.QRadioButton(
+            'To absolut point', self)
+        self.absolut_point_radio_btn.setGeometry(
+            QtCore.QRect(10, 10, 180, 70))
+        self.absolut_point_radio_btn.toggled.connect(
+            lambda: self.option_label.setText('Point'))
+        self.absolut_point_radio_btn.toggle()
+
+        self.movement_vector_radio_btn = QtWidgets.QRadioButton(
+            'Movement vector', self)
+        self.movement_vector_radio_btn.setGeometry(
+            QtCore.QRect(10, 50, 180, 70))
+        self.movement_vector_radio_btn.toggled.connect(
+            lambda: self.option_label.setText('Vector'))
+
+        self.point_input_panel = QtWidgets.QWidget(self)
+        self.point_input_panel.setGeometry(QtCore.QRect(160, 50, 180, 70))
+
+        self.x_lbl = QtWidgets.QLabel('X', self.point_input_panel)
+        self.x_lbl.setGeometry(QtCore.QRect(25, 0, 20, 20))
+
+        self.x_input = QtWidgets.QLineEdit(self.point_input_panel)
+        self.x_input.setGeometry(QtCore.QRect(10, 20, 40, 20))
+        self.x_input.setValidator(self.numeric_validator)
+
+        self.y_lbl = QtWidgets.QLabel('Y', self.point_input_panel)
+        self.y_lbl.setGeometry(QtCore.QRect(75, 0, 20, 20))
+
+        self.y_input = QtWidgets.QLineEdit(self.point_input_panel)
+        self.y_input.setGeometry(QtCore.QRect(60, 20, 40, 20))
+        self.y_input.setValidator(self.numeric_validator)
+
+        # For 3D upgrade
+        # self.z_lbl = QtWidgets.QLabel('Z', self.point_input_panel)
+        # self.z_lbl.setGeometry(QtCore.QRect(125, 0, 20, 20))
+
+        # self.z_input = QtWidgets.QLineEdit(self.point_input_panel)
+        # self.z_input.setGeometry(QtCore.QRect(110, 20, 40, 20))
+        # self.z_input.setValidator(self.numeric_validator)
+
+
+class RotateTab(QtWidgets.QWidget):
+    """
+    Tab for input values to rotate a object
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.points_list = []
+
+        self.numeric_validator = QtGui.QIntValidator(0, 10000)
+        self.degree_validator = QtGui.QIntValidator(-360, 360)
+
+        self.ref_lbl = QtWidgets.QLabel('Rotation reference:', self)
+        self.ref_lbl.setGeometry(QtCore.QRect(10, 10, 180, 20))
+
+        self.over_obj_center_radio_btn = QtWidgets.QRadioButton(
+            'Over object center', self)
+        self.over_obj_center_radio_btn.setGeometry(
+            QtCore.QRect(10, 40, 180, 20))
+        # Set default
+        self.over_obj_center_radio_btn.toggle()
+
+        self.over_world_center_radio_btn = QtWidgets.QRadioButton(
+            'Over world center', self)
+        self.over_world_center_radio_btn.setGeometry(
+            QtCore.QRect(10, 60, 180, 20))
+
+        self.over_point_radio_btn = QtWidgets.QRadioButton(
+            'Over point', self)
+        self.over_point_radio_btn.setGeometry(
+            QtCore.QRect(10, 80, 180, 20))
+
+        # Add point input
+        self.point_to_rotate_panel = QtWidgets.QWidget(self)
+        self.point_to_rotate_panel.setGeometry(
+            QtCore.QRect(10, 100, 180, 70))
+
+        # Hide by default
+        self.point_to_rotate_panel.setVisible(False)
+
+        self.x_lbl = QtWidgets.QLabel('X', self.point_to_rotate_panel)
+        self.x_lbl.setGeometry(QtCore.QRect(25, 0, 20, 20))
+
+        self.x_input = QtWidgets.QLineEdit(self.point_to_rotate_panel)
+        self.x_input.setGeometry(QtCore.QRect(10, 20, 40, 20))
+        self.x_input.setValidator(self.numeric_validator)
+
+        self.y_lbl = QtWidgets.QLabel('Y', self.point_to_rotate_panel)
+        self.y_lbl.setGeometry(QtCore.QRect(75, 0, 20, 20))
+
+        self.y_input = QtWidgets.QLineEdit(self.point_to_rotate_panel)
+        self.y_input.setGeometry(QtCore.QRect(60, 20, 40, 20))
+        self.y_input.setValidator(self.numeric_validator)
+
+        # For 3D upgrade
+        # self.z_lbl = QtWidgets.QLabel('Z', self.point_to_rotate_panel)
+        # self.z_lbl.setGeometry(QtCore.QRect(125, 0, 20, 20))
+
+        # self.z_input = QtWidgets.QLineEdit(self.point_to_rotate_panel)
+        # self.z_input.setGeometry(QtCore.QRect(110, 20, 40, 20))
+        # self.z_input.setValidator(self.numeric_validator)
+
+        # Link this panel to rotation around point radio buton
+        self.over_point_radio_btn.toggled.connect(
+            lambda: self.point_to_rotate_panel.setVisible(
+                not self.point_to_rotate_panel.isVisible()
+            )
+        )
+
+        # Degrees input
+        self.degrees_label = QtWidgets.QLabel('Degrees:', self)
+        self.degrees_label.setGeometry(
+            QtCore.QRect(200, 60, 100, 20))
+
+        self.degree_unit_label = QtWidgets.QLabel('º', self)
+        self.degree_unit_label.setGeometry(
+            QtCore.QRect(240, 80, 100, 20))
+
+        self.degrees_input = QtWidgets.QLineEdit(self)
+        self.degrees_input.setGeometry(
+            QtCore.QRect(200, 80, 40, 20))
+        self.degrees_input.setValidator(self.degree_validator)
+
+
+class RescaleTab(QtWidgets.QWidget):
+    """
+    Tab for input values to rescale a object
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.points_list = []
+
+        self.double_validator = QtGui.QDoubleValidator(0, 1, 3, self)
+
+        # Degrees input
+        self.factor_label = QtWidgets.QLabel('Factor:', self)
+        self.factor_label.setGeometry(
+            QtCore.QRect(160, 60, 100, 20))
+
+        self.factor_input = QtWidgets.QLineEdit(self)
+        self.factor_input.setGeometry(
+            QtCore.QRect(160, 80, 40, 20))
+        self.factor_input.setValidator(self.double_validator)

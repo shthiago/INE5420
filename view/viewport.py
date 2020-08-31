@@ -5,7 +5,7 @@ from model.objects import Point3D, Line, Wireframe
 
 class ViewPort(QtWidgets.QLabel):
     """
-    Class to be the drawing area of applicviewportation
+    Class to be the drawing area of application viewport
     """
 
     def __init__(self, parent):
@@ -33,10 +33,10 @@ class ViewPort(QtWidgets.QLabel):
             List of objects to be draw
         """
         for obj in objects:
-            if not isinstance(obj, list):
+            if not isinstance(obj, dict):
                 raise ValueError('Invalid object to be drawn')
 
-            for point in obj:
+            for point in obj['points']:
                 if len(point) != 2:
                     raise ValueError('Invalid object to be drawn')
 
@@ -48,18 +48,21 @@ class ViewPort(QtWidgets.QLabel):
         qp.begin(self)
         pen = QtGui.QPen()
         pen.setWidth(3)
-        pen.setColor(QtGui.QColor(0, 0, 0))
-        qp.setPen(pen)
         for obj in self.objects:
+            # Get specific attributes
+            color = obj['attr']['color']
+            pen.setColor(color)
+            qp.setPen(pen)
+
             # In case it is a point
-            if len(obj) == 1:
-                x, y = obj[0]
+            if len(obj['points']) == 1:
+                x, y = obj['points'][0]
                 qp.drawPoint(x, y)
 
             else:
                 # In case is a multiple point object
-                prev_p = obj[0]
-                for p in obj[1:]:
+                prev_p = obj['points'][0]
+                for p in obj['points'][1:]:
                     xs, ys = prev_p
                     xe, ye = p
                     qp.drawLine(xs, ys, xe, ye)

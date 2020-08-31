@@ -1,7 +1,7 @@
-from PyQt5.QtGui import QStandardItem
+from PyQt5 import QtGui, QtWidgets, QtCore
 
 
-class ObjectItem(QStandardItem):
+class ObjectItem(QtGui.QStandardItem):
     def __init__(self, object):
         super().__init__(object.name)
         self._object = object

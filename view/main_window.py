@@ -24,6 +24,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self.items_model = QtGui.QStandardItemModel()
         self.objects_list_view.setModel(self.items_model)
 
+        self.objects_list_view.setContextMenuPolicy(
+            QtCore.Qt.CustomContextMenu)
+        self.objects_list_view.customContextMenuRequested.connect(
+            self.custom_context_menu)
+
+        self.objects_list_view_context_menu = QtWidgets.QMenu(
+            self.objects_list_view)
+        self.color_change_action = QtWidgets.QAction()
+        self.color_change_action.setText('Change color')
+        self.objects_list_view_context_menu.addAction(self.color_change_action)
+
+        self.open_transformation_dialog_action = QtWidgets.QAction()
+        self.open_transformation_dialog_action.setText('Transform...')
+        self.objects_list_view_context_menu.addAction(
+            self.open_transformation_dialog_action)
+
+        self.objects_list_view.addAction(self.color_change_action)
+        self.objects_list_view.addAction(
+            self.open_transformation_dialog_action)
+
         self.window_lbl = QtWidgets.QLabel(self.tools_menu_box)
         self.window_lbl.setGeometry(QtCore.QRect(10, 180, 71, 16))
         self.window_lbl.setText("Window")
@@ -146,3 +166,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.menubar.addAction(self.menuFile.menuAction())
         self.menuFile.addAction(self.actionAdd_object)
+
+    def custom_context_menu(self, point):
+        """
+        Context menu for objects view list
+        """
+        # Check if any item is selected before open the menu
+        si = self.objects_list_view.selectedIndexes()
+        if len(si) < 1:
+            return
+
+        self.objects_list_view_context_menu.exec_(
+            self.objects_list_view.mapToGlobal(point))

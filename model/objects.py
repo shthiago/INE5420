@@ -1,90 +1,119 @@
 """
 File for modeling objects to be stored
 """
+from typing import List
 
-from collections import namedtuple
-
-# Class for holding the three values with gettings/setters
-Point3D = namedtuple('Point3D', ['name', 'x', 'y', 'z'])
+from PyQt5.QtGui import QColor
 
 
-class Line:
+class BaseNamedColoredObject:
+    '''Base class for objects'''
+
+    def __init__(self, name: str, color: QColor):
+        self._color: QColor = color
+        self._name: str = name
+
+    @property
+    def color(self) -> QColor:
+        '''Getter for object color'''
+        return self._color
+
+    @color.setter
+    def color(self, color: QColor):
+        '''Setter for object color'''
+        self._color = color
+
+    @property
+    def name(self) -> str:
+        '''Getter for object name'''
+        return self._name
+
+    @name.setter
+    def name(self, name: str):
+        '''Setter for object name'''
+        self._name = name
+
+
+class Point3D(BaseNamedColoredObject):
+    """
+    Class for holding the three values with gettings/setters
+    """
+
+    def __init__(self, name: str, x: int, y: int, z: int):
+        super().__init__(name, QColor(0, 0, 0))
+        self._x: int = x
+        self._y: int = y
+        self._z: int = z
+
+    @property
+    def x(self) -> int:
+        return self._x
+
+    @x.setter
+    def x(self, x: int):
+        self._x = x
+
+    @property
+    def y(self) -> int:
+        return self._y
+
+    @y.setter
+    def y(self, y: int):
+        self._y = y
+
+    @property
+    def z(self) -> int:
+        return self._z
+
+    @z.setter
+    def z(self, z: int):
+        self._z = z
+
+
+class Line(BaseNamedColoredObject):
     """
     Class for holding the two points of a line
     """
 
     def __init__(self, name: str, p1: Point3D, p2: Point3D):
-        if not isinstance(p1, Point3D):
-            raise ValueError(f'p1 shoulf be of type Point3D, got {type(p1)}')
-        if not isinstance(p2, Point3D):
-            raise ValueError(f'p2 shoulf be of type Point3D, got {type(p2)}')
-
-        self._name = name
-        self._p1 = p1
-        self._p2 = p2
+        super().__init__(name, QColor(0, 0, 0))
+        self._p1: Point3D = p1
+        self._p2: Point3D = p2
 
     @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, name):
-        self._name = name
-
-    @property
-    def p1(self):
+    def p1(self) -> Point3D:
         return self._p1
 
     @p1.setter
-    def p1(self, p1):
+    def p1(self, p1: Point3D):
         self._p1 = p1
 
     @property
-    def p2(self):
+    def p2(self) -> Point3D:
         return self._p2
 
     @p2.setter
-    def p2(self, p2):
+    def p2(self, p2: Point3D):
         self._p2 = p2
 
     @property
-    def points(self):
+    def points(self) -> List[Point3D]:
         return [self._p1, self._p2]
 
 
-class Wireframe:
+class Wireframe(BaseNamedColoredObject):
     """
     Class to hold polygons
     """
 
-    def __init__(self, name: str, points: list):
-        """
-        Parameters
-        ----------
-        points: list
-            List of Point3D
-        """
-
-        for i in points:
-            if not isinstance(i, Point3D):
-                raise ValueError('Wireframe must be constructed ' +
-                                 'from Point3D list')
-
+    def __init__(self, name: str, points: List[Point3D]):
+        super().__init__(name, QColor(0, 0, 0))
         self._points = points
-        self._name = name
 
     @property
-    def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, name):
-        self._name = name
-
-    @property
-    def points(self):
+    def points(self) -> List[Point3D]:
         return self._points
 
     @points.setter
-    def points(self, points):
+    def points(self, points: List[Point3D]):
         self._points = points
