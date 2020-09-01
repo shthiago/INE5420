@@ -1,7 +1,7 @@
 """
 File for modeling objects to be stored
 """
-from typing import List
+from typing import List, NamedTuple
 
 from PyQt5.QtGui import QColor
 
@@ -117,3 +117,10 @@ class Wireframe(BaseNamedColoredObject):
     @points.setter
     def points(self, points: List[Point3D]):
         self._points = points
+
+
+class ViewportObjectRepresentation(NamedTuple):
+    '''Class to hold data of a object ready to be draw at viewport'''
+    name: str
+    points: List[Point3D]
+    color: QColor

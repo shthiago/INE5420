@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QWidget
 
-from .objects import Point3D, Line, Wireframe
-from view.dialog import LineTab, PointTab
+from src.model.objects import Point3D, Line, Wireframe
+from src.view.dialog import LineTab, PointTab
 
 
 def create_line(name: str, tab: LineTab):
@@ -45,14 +45,6 @@ def create_wireframe(name: str, tab: PointTab):
     return Wireframe(name, points)
 
 
-# Mapping possible factories
-specific_factory = {
-    'Point': create_point3D,
-    'Line': create_line,
-    'Wireframe': create_wireframe,
-}
-
-
 def new_object_factory(obj_name: str, tab_name: str, tab: QWidget):
     """
     Function to centralize object creation, mapped on dict
@@ -64,8 +56,14 @@ def new_object_factory(obj_name: str, tab_name: str, tab: QWidget):
             'error_msg': ''
         }
 
-        obj = specific_factory[tab_name](obj_name, tab)
-        return status, obj
+        if tab_name == 'Point':
+            return status, create_point3D(obj_name, tab)
+        elif tab_name == 'Line':
+            return status, create_line(obj_name, tab)
+        elif tab_name == 'Wireframe':
+            return status, create_wireframe(obj_name, tab)
+
+        raise ValueError(f'Invalid tab name: {tab_name}')
 
     except ValueError as e:
         status = {

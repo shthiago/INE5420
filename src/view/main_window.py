@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 
-from .viewport import ViewPort
+from src.view.viewport import ViewPort
 
 
 class MainWindow(QtWidgets.QMainWindow):

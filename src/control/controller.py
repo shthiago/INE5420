@@ -1,14 +1,16 @@
 import sys
+from typing import List
 
 from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QColorDialog
 from PyQt5.QtGui import QPalette, QColor
 from PyQt5.QtCore import Qt
 
-from view.main_window import MainWindow
-from view.dialog import NewObjectDialog, TransformationDialog
-from view.object_item import ObjectItem
-from model import new_object_factory
-from model.objects import Point3D, Line, Wireframe
+from src.view.main_window import MainWindow
+from src.view.dialog import NewObjectDialog, TransformationDialog
+from src.view.object_item import ObjectItem
+from src.model import new_object_factory
+from src.model.objects import Point3D, Line, Wireframe
+from src.model.objects import ViewportObjectRepresentation
 
 
 class Controller:
@@ -52,25 +54,25 @@ class Controller:
         self.yvp_max = 600
 
         # # MOCK for testings
-        self.add_object_to_list(
-            Line('Cool line',
-                 Point3D('_p1', 0, 0, 0),
-                 Point3D('_p2', 100, 100, 0))
-        )
-        self.add_object_to_list(
-            Wireframe('Cool Wireframe 0', points=[
-                Point3D('_p1', 100, 100, 0),
-                Point3D('_p1', 150, 200, 0),
-                Point3D('_p1', 200, 100, 0),
-                Point3D('_p1', 100, 100, 0)
-            ]))
-        self.add_object_to_list(
-            Wireframe('Cool Wireframe 1', points=[
-                Point3D('_p1', 200, 200, 0),
-                Point3D('_p1', 250, 300, 0),
-                Point3D('_p1', 300, 200, 0),
-                Point3D('_p1', 200, 200, 0)
-            ]))
+        # self.add_object_to_list(
+        #     Line('Cool line',
+        #          Point3D('_p1', 0, 0, 0),
+        #          Point3D('_p2', 100, 100, 0))
+        # )
+        # self.add_object_to_list(
+        #     Wireframe('Cool Wireframe 0', points=[
+        #         Point3D('_p1', 100, 100, 0),
+        #         Point3D('_p1', 150, 200, 0),
+        #         Point3D('_p1', 200, 100, 0),
+        #         Point3D('_p1', 100, 100, 0)
+        #     ]))
+        # self.add_object_to_list(
+        #     Wireframe('Cool Wireframe 1', points=[
+        #         Point3D('_p1', 200, 200, 0),
+        #         Point3D('_p1', 250, 300, 0),
+        #         Point3D('_p1', 300, 200, 0),
+        #         Point3D('_p1', 200, 200, 0)
+        #     ]))
         self.process_viewport()
 
     def run(self):
@@ -198,7 +200,6 @@ class Controller:
         """
         item_clicked = self.main_window.objects_list_view.selectedIndexes()[0]
         item_name = item_clicked.data()
-        print(item_name)
         color = QColorDialog.getColor()
 
         # Get object with same name as item clicked and change its color
@@ -326,14 +327,14 @@ class Controller:
         """
         Function to create the window that will be drew into viewport
         """
-        transformed_groups_of_points = []
+        transformed_groups_of_points: List[ViewportObjectRepresentation] = []
         for obj in self.objects_list:
             if isinstance(obj, Point3D):
                 transformed_groups_of_points.append(
-                    {'name': obj.name,
-                     'points': [self.transform_point(obj)],
-                     'attr': {'color': obj.color}
-                     }
+                    ViewportObjectRepresentation(
+                        name=obj.name,
+                        points=[self.transform_point(obj)],
+                        color=obj.color)
                 )
 
             else:
@@ -342,10 +343,9 @@ class Controller:
                     pts.append(self.transform_point(p))
 
                 transformed_groups_of_points.append(
-                    {'name': obj.name,
-                     'points': pts,
-                     'attr': {'color': obj.color}
-                     }
+                    ViewportObjectRepresentation(name=obj.name,
+                                                 points=pts,
+                                                 color=obj.color)
                 )
 
         self.main_window.viewport.draw_objects(transformed_groups_of_points)
@@ -360,7 +360,7 @@ class Controller:
 
         Return
         ----------
-        (x, y) transformed to current viewport
+        UnamedPoint3D(x, y) transformed to current viewport
         """
         xw = p.x
         yw = p.y
@@ -379,4 +379,4 @@ class Controller:
         yvp = (1 - ((yw - ywmin)/(ywmax - ywmin))) * \
             (yvpmax - yvpmin) - self.yvp_min
 
-        return (xvp, yvp)
+        return Point3D(name=p.name, x=xvp, y=yvp, z=p.z)
