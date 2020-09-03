@@ -1,6 +1,8 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import Qt
 
+from src.view.viewport import ViewPort
+
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -10,7 +12,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def initUi(self):
         self.setObjectName('MainWindow')
-        self.resize(800, 654)
+        self.resize(850, 650)
 
         # Tools setup
         self.tools_menu_box = QtWidgets.QGroupBox(self)
@@ -22,6 +24,26 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.items_model = QtGui.QStandardItemModel()
         self.objects_list_view.setModel(self.items_model)
+
+        self.objects_list_view.setContextMenuPolicy(
+            QtCore.Qt.CustomContextMenu)
+        self.objects_list_view.customContextMenuRequested.connect(
+            self.custom_context_menu)
+
+        self.objects_list_view_context_menu = QtWidgets.QMenu(
+            self.objects_list_view)
+        self.color_change_action = QtWidgets.QAction()
+        self.color_change_action.setText('Change color')
+        self.objects_list_view_context_menu.addAction(self.color_change_action)
+
+        self.open_transformation_dialog_action = QtWidgets.QAction()
+        self.open_transformation_dialog_action.setText('Transform...')
+        self.objects_list_view_context_menu.addAction(
+            self.open_transformation_dialog_action)
+
+        self.objects_list_view.addAction(self.color_change_action)
+        self.objects_list_view.addAction(
+            self.open_transformation_dialog_action)
 
         self.window_lbl = QtWidgets.QLabel(self.tools_menu_box)
         self.window_lbl.setGeometry(QtCore.QRect(10, 180, 71, 16))
@@ -40,7 +62,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.step_lbl.setText("Step:")
 
         self.view_left_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        self.view_left_btn.setGeometry(QtCore.QRect(50, 250, 41, 23))
+        self.view_left_btn.setGeometry(QtCore.QRect(10, 250, 41, 23))
         self.view_left_btn.setText("Left")
 
         self.step_pct_lbl = QtWidgets.QLabel(self.tools_menu_box)
@@ -52,7 +74,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.degrees_lbl.setText("Dregrees")
 
         self.view_up_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        self.view_up_btn.setGeometry(QtCore.QRect(30, 230, 41, 23))
+        self.view_up_btn.setGeometry(QtCore.QRect(30, 227, 41, 23))
         self.view_up_btn.setText("Up")
 
         self.rotate_lbl = QtWidgets.QLabel(self.tools_menu_box)
@@ -60,6 +82,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rotate_lbl.setText("Rotate")
 
         self.degrees_input = QtWidgets.QLineEdit(self.tools_menu_box)
+        self.degrees_input.setText('0')
         self.degrees_input.setGeometry(QtCore.QRect(70, 330, 41, 23))
         self.degrees_input.setValidator(QtGui.QIntValidator(0, 360))
 
@@ -76,19 +99,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.degrees_unit_lbl.setText("º")
 
         self.view_right_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        self.view_right_btn.setGeometry(QtCore.QRect(10, 250, 41, 23))
+        self.view_right_btn.setGeometry(QtCore.QRect(52, 250, 41, 23))
         self.view_right_btn.setText("Right")
 
         self.step_input = QtWidgets.QLineEdit(self.tools_menu_box)
+        self.step_input.setText('10')
         self.step_input.setGeometry(QtCore.QRect(50, 200, 41, 23))
-        self.step_input.setValidator(QtGui.QIntValidator(0, 100))
+        self.step_input.setValidator(QtGui.QIntValidator(0, 99))
 
         self.zoom_lbl = QtWidgets.QLabel(self.tools_menu_box)
         self.zoom_lbl.setGeometry(QtCore.QRect(30, 400, 57, 15))
         self.zoom_lbl.setText("Zoom")
 
         self.view_down_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        self.view_down_btn.setGeometry(QtCore.QRect(30, 270, 41, 23))
+        self.view_down_btn.setGeometry(QtCore.QRect(30, 273, 41, 23))
         self.view_down_btn.setText("Down")
 
         self.out_btn = QtWidgets.QPushButton(self.tools_menu_box)
@@ -106,6 +130,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.paralel_radio_btn = QtWidgets.QRadioButton(self.tools_menu_box)
         self.paralel_radio_btn.setGeometry(QtCore.QRect(10, 510, 99, 21))
         self.paralel_radio_btn.setText("Paralel")
+        # Default is paralel
+        self.paralel_radio_btn.toggle()
 
         self.perspective_radio_btn = QtWidgets.QRadioButton(
             self.tools_menu_box)
@@ -125,13 +151,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rotate_z_btn.setText("Z")
 
         # Canvas setup
-        self.canvas = QtWidgets.QLabel(self)
-        self.canvas.setGeometry(QtCore.QRect(190, 20, 601, 551))
-        self.canvas.setText("")
-        self.canvas.setObjectName("canvas")
-
-        qp = QtGui.QPainter()
-        qp.begin(self)
+        self.viewport = ViewPort(self)
+        self.viewport.setGeometry(QtCore.QRect(200, 30, 600, 600))
 
         # Setting up menu bar
         self.menubar = QtWidgets.QMenuBar(self)
@@ -147,6 +168,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menubar.addAction(self.menuFile.menuAction())
         self.menuFile.addAction(self.actionAdd_object)
 
+<<<<<<< HEAD:view/main_window.py
 
         qp.setPen(Qt.red)
 
@@ -159,3 +181,16 @@ class MainWindow(QtWidgets.QMainWindow):
         qp.drawPoint(10, 16)
 
         qp.end()
+=======
+    def custom_context_menu(self, point):
+        """
+        Context menu for objects view list
+        """
+        # Check if any item is selected before open the menu
+        si = self.objects_list_view.selectedIndexes()
+        if len(si) < 1:
+            return
+
+        self.objects_list_view_context_menu.exec_(
+            self.objects_list_view.mapToGlobal(point))
+>>>>>>> transformations:src/view/main_window.py
