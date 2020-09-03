@@ -39,34 +39,34 @@ class Point3D(BaseNamedColoredObject):
     Class for holding the three values with gettings/setters
     """
 
-    def __init__(self, name: str, x: int, y: int, z: int):
+    def __init__(self, name: str, x: float, y: float, z: float):
         super().__init__(name, QColor(0, 0, 0))
-        self._x: int = x
-        self._y: int = y
-        self._z: int = z
+        self._x: float = x
+        self._y: float = y
+        self._z: float = z
 
     @property
-    def x(self) -> int:
+    def x(self) -> float:
         return self._x
 
     @x.setter
-    def x(self, x: int):
+    def x(self, x: float):
         self._x = x
 
     @property
-    def y(self) -> int:
+    def y(self) -> float:
         return self._y
 
     @y.setter
-    def y(self, y: int):
+    def y(self, y: float):
         self._y = y
 
     @property
-    def z(self) -> int:
+    def z(self) -> float:
         return self._z
 
     @z.setter
-    def z(self, z: int):
+    def z(self, z: float):
         self._z = z
 
 
