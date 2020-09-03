@@ -168,20 +168,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menubar.addAction(self.menuFile.menuAction())
         self.menuFile.addAction(self.actionAdd_object)
 
-<<<<<<< HEAD:view/main_window.py
+        # qp.setPen(Qt.red)
 
-        qp.setPen(Qt.red)
-
-        qp.drawPoint(10, 10)
-        qp.drawPoint(10, 11)
-        qp.drawPoint(10, 12)
-        qp.drawPoint(10, 13)
-        qp.drawPoint(10, 14)
-        qp.drawPoint(10, 15)
-        qp.drawPoint(10, 16)
-
-        qp.end()
-=======
+        # qp.drawPoint(10, 10)
+        # qp.drawPoint(10, 11)
+        # qp.drawPoint(10, 12)
+        # qp.drawPoint(10, 13)
+        # qp.drawPoint(10, 14)
+        # qp.drawPoint(10, 15)
+        # qp.drawPoint(10, 16)
+        # 
+        # qp.end()
     def custom_context_menu(self, point):
         """
         Context menu for objects view list
@@ -193,4 +190,3 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.objects_list_view_context_menu.exec_(
             self.objects_list_view.mapToGlobal(point))
->>>>>>> transformations:src/view/main_window.py

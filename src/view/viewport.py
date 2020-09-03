@@ -52,8 +52,8 @@ class ViewPort(QtWidgets.QLabel):
 
             # In case it is a point
             if len(obj.points) == 1:
-                x, y = obj.points[0]
-                painter.drawPoint(x, y)
+                point = obj.points[0]
+                painter.drawPoint(point.x, point.y)
 
             # In case it is a line
             elif len(obj.points) == 2:

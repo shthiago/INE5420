@@ -172,6 +172,15 @@ class Controller:
         self.main_window.in_btn.clicked.connect(
             lambda: self.zoom_handler('in'))
 
+        # self.main_window.zoom_in_btn.clicked.connect(
+        #     lambda: )
+
+        # self.main_window.zoom_out_btn.clicked.connect(
+        #     lambda: )
+
+        # self.main_window.set_window_btn.clicked.connect(
+        #     lambda: )
+
         self.main_window.out_btn.clicked.connect(
             lambda: self.zoom_handler('out'))
 
@@ -186,6 +195,15 @@ class Controller:
 
         self.main_window.view_right_btn.clicked.connect(
             lambda: self.window_move_handler('right'))
+
+        # self.main_window.rotate_x_btn.clicked.connect(
+        #     lambda: )
+
+        # self.main_window.rotate_y_btn.clicked.connect(
+        #     lambda: )
+
+        # self.main_window.rotate_z_btn.clicked.connect(
+        #     lambda: )
 
         self.main_window.color_change_action.triggered.connect(
             self.color_picker_dialog)
