@@ -157,7 +157,7 @@ class Transformator:
         return self._rotate_internal_wireframe_over_center(angle)
 
     def _rotate_internal_line_over_center(self, angle: float) -> Line:
-        '''Rotate over centerwhen internal is a Line and
+        '''Rotate over center when internal is a Line and
             return copy of object'''
         if isinstance(self._object, Point3D):
             error = 'Trying to operate as line/wireframe over point'

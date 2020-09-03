@@ -329,8 +329,24 @@ class TransformationDialog(QtWidgets.QDialog):
         """
         Set text after "Modifying object"
         """
-
+        
         self.target_obj_lbl.setText(text)
+    
+    def active_tab(self):
+        """
+        Get active tab from TabWidget
+        """
+
+        active_index = self.tab_panel.currentIndex()
+        active_tab = self.tab_panel.currentWidget()
+        active_tab_name = self.tab_panel.tabText(active_index)
+
+        return active_tab_name, active_tab
+    
+    def reset_values(self):
+        self.rescale_tab.reset_values()
+        self.rotate_tab.reset_values()
+        self.move_tab.reset_values()
 
 
 class MoveTab(QtWidgets.QWidget):
@@ -387,6 +403,12 @@ class MoveTab(QtWidgets.QWidget):
         # self.z_input = QtWidgets.QLineEdit(self.point_input_panel)
         # self.z_input.setGeometry(QtCore.QRect(110, 20, 40, 20))
         # self.z_input.setValidator(self.numeric_validator)
+    
+    def reset_values(self):
+        self.x_input.clear()
+        self.y_input.clear()
+        # self.z_input.clear()
+
 
 
 class RotateTab(QtWidgets.QWidget):
@@ -471,6 +493,13 @@ class RotateTab(QtWidgets.QWidget):
         self.degrees_input.setGeometry(
             QtCore.QRect(200, 80, 40, 20))
         self.degrees_input.setValidator(self.degree_validator)
+    
+    def reset_values(self):
+        self.x_input.clear()
+        self.y_input.clear()
+        # self.z_input.clear()
+        self.degrees_input.clear()
+
 
 
 class RescaleTab(QtWidgets.QWidget):
@@ -493,3 +522,6 @@ class RescaleTab(QtWidgets.QWidget):
         self.factor_input.setGeometry(
             QtCore.QRect(160, 80, 40, 20))
         self.factor_input.setValidator(self.double_validator)
+
+    def reset_values(self):
+        self.factor_input.clear()

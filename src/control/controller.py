@@ -11,7 +11,7 @@ from src.view.object_item import ObjectItem
 from src.model import new_object_factory
 from src.model.objects import Point3D, Line, Wireframe
 from src.model.objects import ViewportObjectRepresentation
-
+from src.control.transform import Transformator
 
 class Controller:
     """
@@ -101,8 +101,16 @@ class Controller:
 
     def add_transform_dialog_handlers(self):
         """
-        Add any neede handler to input transformations parameters dialog
+        Add any needed handler to input transformations parameters dialog
         """
+        self.transform_dialog.buttonBox.accepted.connect(
+            self.apply_transformation_handler
+        )
+
+        self.transform_dialog.buttonBox.rejected.connect(
+            self.reject_transformation_handler
+        )
+
 
     def dialog_accepted_handler(self):
         """
@@ -235,6 +243,7 @@ class Controller:
         # Set text on transform dialog
         self.transform_dialog.set_target_object(item_clicked.data())
         self.transform_dialog.setVisible(True)
+
 
     def window_move_handler(self, mode: str):
         """
@@ -398,3 +407,94 @@ class Controller:
             (yvpmax - yvpmin) - self.yvp_min
 
         return Point3D(name=p.name, x=xvp, y=yvp, z=p.z)
+
+    def apply_transformation_handler(self):
+        tab_name, tab = self.transform_dialog.active_tab()
+        target = self.transform_dialog.target_obj_lbl.text()
+
+        obj = None
+        
+        for o in self.objects_list:
+            if o.name == target:
+                obj = o
+                break
+
+        if obj is None: ##obj not found
+            raise Exception('Target object not found: ' + target)
+
+        if tab_name == "Move" :
+            self.transform_move(obj, tab)
+
+        elif tab_name == "Rotate":
+            self.transform_rotate(obj, tab)
+
+        else: ##tab_name == "Rescale"
+            self.transform_rescale(obj, tab)
+
+        self.transform_dialog.reset_values()
+        self.transform_dialog.setVisible(False)
+        self.process_viewport()
+
+    def reject_transformation_handler(self):
+        self.transform_dialog.setVisible(False)
+        self.transform_dialog.reset_values()
+    
+
+    # Functions responsible for transforming objects
+
+    def transform_move(self, obj, tab):
+        transformator = Transformator(obj)
+
+        x = float(tab.x_input.text())
+        y = float(tab.y_input.text())
+        #z = float(tab.z_input.text())
+        option = tab.option_label.text()
+
+        if option == "Point":
+            new_obj = transformator.translate(x, y)
+        else: #option == "Vector"
+            pass
+        
+        ## inserting new obj in the same index as the transformed obj
+        index = self.objects_list.index(obj)
+        self.objects_list.pop(index)
+        self.objects_list.insert(index, new_obj)
+        
+    
+    def transform_rotate(self, obj, tab):
+        transformator = Transformator(obj)
+        option = tab.ref_lbl.text()
+        angle = float(tab.degrees_input.text())
+
+        if tab.over_obj_center_radio_btn.isChecked():
+            new_obj = transformator.rotate_by_degrees_geometric_center(angle)
+            
+        elif tab.over_world_center_radio_btn.isChecked():
+            new_obj = transformator.rotate_by_degrees_origin(angle)
+            
+        else: # tab.over_point_radio_btn.isChecked()
+            x = float(tab.x_input.text())
+            y = float(tab.y_input.text())
+            z = 0 #float(tab.z_input.text())
+            new_obj = transformator.rotate_by_degrees_point(angle, Point3D('rotationPoint', x, y, z))
+            
+
+
+        ## inserting new obj in the same index as the transformed obj
+        index = self.objects_list.index(obj)
+        self.objects_list.pop(index)
+        self.objects_list.insert(index, new_obj)
+    
+    def transform_rescale(self, obj, tab):
+        scale_factor = float(tab.factor_input.text())
+        transformator = Transformator(obj)
+        new_obj = transformator.scale(scale_factor, scale_factor)
+
+        ## inserting new obj in the same index as the transformed obj
+        index = self.objects_list.index(obj)
+        self.objects_list.pop(index)
+        self.objects_list.insert(index, new_obj)
+
+    
+
+
