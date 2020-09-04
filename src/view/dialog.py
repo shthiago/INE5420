@@ -5,7 +5,7 @@ class NewObjectDialog(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
 
-        self.numeric_validator = QtGui.QIntValidator(0, 1000)
+        self.numeric_validator = QtGui.QIntValidator(-1000, 1000)
 
         self.initUi()
 
@@ -79,7 +79,7 @@ class LineTab(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
 
-        self.numeric_validator = QtGui.QIntValidator(0, 1000)
+        self.numeric_validator = QtGui.QIntValidator(-1000, 1000)
 
         self.start_lbl = QtWidgets.QLabel(self)
         self.start_lbl.setGeometry(QtCore.QRect(10, 10, 191, 16))
@@ -160,7 +160,7 @@ class PointTab(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
 
-        self.numeric_validator = QtGui.QIntValidator(0, 1000)
+        self.numeric_validator = QtGui.QIntValidator(-1000, 1000)
 
         self.z_lbl_pt = QtWidgets.QLabel(self)
         self.z_lbl_pt.setGeometry(QtCore.QRect(160, 30, 21, 16))
@@ -209,7 +209,7 @@ class WireframeTab(QtWidgets.QWidget):
         super().__init__()
         self.points_list = []
 
-        self.numeric_validator = QtGui.QIntValidator(0, 1000)
+        self.numeric_validator = QtGui.QIntValidator(-1000, 1000)
 
         self.points_view = QtWidgets.QListView(self)
         self.points_view.setGeometry(QtCore.QRect(160, 10, 200, 150))
@@ -292,7 +292,7 @@ class TransformationDialog(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
 
-        self.numeric_validator = QtGui.QIntValidator(0, 1000)
+        self.numeric_validator = QtGui.QIntValidator(-1000, 1000)
 
         self.initUi()
 
@@ -329,9 +329,9 @@ class TransformationDialog(QtWidgets.QDialog):
         """
         Set text after "Modifying object"
         """
-        
+
         self.target_obj_lbl.setText(text)
-    
+
     def active_tab(self):
         """
         Get active tab from TabWidget
@@ -342,7 +342,7 @@ class TransformationDialog(QtWidgets.QDialog):
         active_tab_name = self.tab_panel.tabText(active_index)
 
         return active_tab_name, active_tab
-    
+
     def reset_values(self):
         self.rescale_tab.reset_values()
         self.rotate_tab.reset_values()
@@ -403,12 +403,11 @@ class MoveTab(QtWidgets.QWidget):
         # self.z_input = QtWidgets.QLineEdit(self.point_input_panel)
         # self.z_input.setGeometry(QtCore.QRect(110, 20, 40, 20))
         # self.z_input.setValidator(self.numeric_validator)
-    
+
     def reset_values(self):
         self.x_input.clear()
         self.y_input.clear()
         # self.z_input.clear()
-
 
 
 class RotateTab(QtWidgets.QWidget):
@@ -493,13 +492,12 @@ class RotateTab(QtWidgets.QWidget):
         self.degrees_input.setGeometry(
             QtCore.QRect(200, 80, 40, 20))
         self.degrees_input.setValidator(self.degree_validator)
-    
+
     def reset_values(self):
         self.x_input.clear()
         self.y_input.clear()
         # self.z_input.clear()
         self.degrees_input.clear()
-
 
 
 class RescaleTab(QtWidgets.QWidget):

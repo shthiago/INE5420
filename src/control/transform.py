@@ -352,18 +352,26 @@ class Transformator:
         rotated.color = self._object.color
         return rotated
 
-    def translate(self, desloc_x: float, desloc_y: float
-                  ) -> Union[Point3D, Line, Wireframe]:
+    def translate_by_vector(self, desloc_x: float, desloc_y: float
+                            ) -> Union[Point3D, Line, Wireframe]:
         '''Translate internal object by deslocation values'''
         if isinstance(self._object, Point3D):
-            return self._translate_point(desloc_x, desloc_y)
+            return self._translate_point_by_vector(desloc_x, desloc_y)
 
         if isinstance(self._object, Line):
-            return self._translate_line(desloc_x, desloc_y)
+            return self._translate_line_by_vector(desloc_x, desloc_y)
 
         return self._translate_wireframe(desloc_x, desloc_y)
 
-    def _translate_point(self, desloc_x: float, desloc_y: float) -> Point3D:
+    def translate_to_point(self, point_x: float, point_y: float):
+        '''Translate internal object to absolute point'''
+        # Calcualte vector to take object to target position
+        center = self.get_object_geometric_center()
+
+        return self.translate_by_vector(point_x - center.x,
+                                        point_y - center.y)
+
+    def _translate_point_by_vector(self, desloc_x: float, desloc_y: float) -> Point3D:
         '''Translate internal object when is a point and return copy'''
         if not isinstance(self._object, Point3D):
             error = 'Trying to operate as point over:'
@@ -378,7 +386,7 @@ class Transformator:
 
         return translated
 
-    def _translate_line(self, desloc_x: float, desloc_y: float) -> Line:
+    def _translate_line_by_vector(self, desloc_x: float, desloc_y: float) -> Line:
         '''Translate internal object when is a line and return copy'''
         if isinstance(self._object, Point3D):
             error = 'Trying to operate as line/wireframe over point'

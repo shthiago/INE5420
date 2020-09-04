@@ -41,12 +41,13 @@ class ViewPort(QtWidgets.QLabel):
 
     def paintEvent(self, event: QtGui.QPaintEvent):
         '''Reimplementing paint event function, that is called by update'''
+
         painter = QtGui.QPainter()
         painter.begin(self)
         pen = QtGui.QPen()
-        pen.setWidth(3)
         for obj in self.objects:
             # Get specific attributes
+            pen.setWidth(obj.thickness)
             pen.setColor(obj.color)
             painter.setPen(pen)
 

@@ -13,6 +13,7 @@ from src.model.objects import Point3D, Line, Wireframe
 from src.model.objects import ViewportObjectRepresentation
 from src.control.transform import Transformator
 
+
 class Controller:
     """
     Controller for application
@@ -42,10 +43,10 @@ class Controller:
         self.add_transform_dialog_handlers()
 
         # Initial window settings
-        self.window_xmin = 0
-        self.window_ymin = 0
-        self.window_xmax = 600
-        self.window_ymax = 600
+        self.window_xmin = -300
+        self.window_ymin = -300
+        self.window_xmax = 300
+        self.window_ymax = 300
 
         # Viewport values
         self.xvp_min = 0
@@ -53,26 +54,23 @@ class Controller:
         self.xvp_max = 600
         self.yvp_max = 600
 
-        # # MOCK for testings
-        # self.add_object_to_list(
-        #     Line('Cool line',
-        #          Point3D('_p1', 0, 0, 0),
-        #          Point3D('_p2', 100, 100, 0))
-        # )
-        # self.add_object_to_list(
-        #     Wireframe('Cool Wireframe 0', points=[
-        #         Point3D('_p1', 100, 100, 0),
-        #         Point3D('_p1', 150, 200, 0),
-        #         Point3D('_p1', 200, 100, 0),
-        #         Point3D('_p1', 100, 100, 0)
-        #     ]))
-        # self.add_object_to_list(
-        #     Wireframe('Cool Wireframe 1', points=[
-        #         Point3D('_p1', 200, 200, 0),
-        #         Point3D('_p1', 250, 300, 0),
-        #         Point3D('_p1', 300, 200, 0),
-        #         Point3D('_p1', 200, 200, 0)
-        #     ]))
+        self.add_object_to_list(
+            Wireframe(name='Cubinho daora', points=[
+                Point3D('', 0, 0, 0),
+                Point3D('', 100, 0, 0),
+                Point3D('', 100, 100, 0),
+                Point3D('', 0, 100, 0),
+                Point3D('', 0, 0, 0),
+                Point3D('', 100, 0, 0),
+                Point3D('', 150, 50, 0),
+                Point3D('', 150, 150, 0),
+                Point3D('', 100, 100, 0),
+                Point3D('', 150, 150, 0),
+                Point3D('', 50, 150, 0),
+                Point3D('', 0, 100, 0),
+            ])
+        )
+
         self.process_viewport()
 
     def run(self):
@@ -110,7 +108,6 @@ class Controller:
         self.transform_dialog.buttonBox.rejected.connect(
             self.reject_transformation_handler
         )
-
 
     def dialog_accepted_handler(self):
         """
@@ -244,7 +241,6 @@ class Controller:
         self.transform_dialog.set_target_object(item_clicked.data())
         self.transform_dialog.setVisible(True)
 
-
     def window_move_handler(self, mode: str):
         """
         Take step value from input and apply window movementation
@@ -318,12 +314,18 @@ class Controller:
 
         # Process step in pct
         if mode == 'in':
-            self.window_xmax *= (1 - step/100)
-            self.window_ymax *= (1 - step/100)
+            self.window_xmax *= (1 - int(step/2)/100)
+            self.window_xmin *= (1 - int(step/2)/100)
+
+            self.window_ymax *= (1 - int(step/2)/100)
+            self.window_ymin *= (1 - int(step/2)/100)
 
         elif mode == 'out':
-            self.window_xmax *= (1 + step/100)
-            self.window_ymax *= (1 + step/100)
+            self.window_xmax *= (1 + int(step/2)/100)
+            self.window_xmin *= (1 + int(step/2)/100)
+
+            self.window_ymax *= (1 + int(step/2)/100)
+            self.window_ymin *= (1 + int(step/2)/100)
 
         # Update objects on viewport
         self.process_viewport()
@@ -354,8 +356,18 @@ class Controller:
         """
         Function to create the window that will be drew into viewport
         """
+
+        grid = [Line('gx',
+                     Point3D('_gx1', 0, -1000, 0),
+                     Point3D('_gx2', 0, 1000, 0),
+                     thickness=1),
+                Line('gy',
+                     Point3D('_gy1', -1000, 0, 0),
+                     Point3D('_gy2', 1000, 0, 0),
+                     thickness=1)]
+
         transformed_groups_of_points: List[ViewportObjectRepresentation] = []
-        for obj in self.objects_list:
+        for obj in grid + self.objects_list:
             if isinstance(obj, Point3D):
                 transformed_groups_of_points.append(
                     ViewportObjectRepresentation(
@@ -372,12 +384,12 @@ class Controller:
                 transformed_groups_of_points.append(
                     ViewportObjectRepresentation(name=obj.name,
                                                  points=pts,
-                                                 color=obj.color)
+                                                 color=obj.color,
+                                                 thickness=obj.thickness)
                 )
-
         self.main_window.viewport.draw_objects(transformed_groups_of_points)
 
-    def transform_point(self, p: Point3D):
+    def transform_point(self, point: Point3D):
         """
         Apply viewport transformation to a point
 
@@ -389,8 +401,8 @@ class Controller:
         ----------
         UnamedPoint3D(x, y) transformed to current viewport
         """
-        xw = p.x
-        yw = p.y
+        xw = point.x
+        yw = point.y
 
         xwmax = self.window_xmax
         ywmax = self.window_ymax
@@ -406,29 +418,31 @@ class Controller:
         yvp = (1 - ((yw - ywmin)/(ywmax - ywmin))) * \
             (yvpmax - yvpmin) - self.yvp_min
 
-        return Point3D(name=p.name, x=xvp, y=yvp, z=p.z)
+        return Point3D(name=point.name, x=xvp, y=yvp, z=point.z)
 
     def apply_transformation_handler(self):
+        '''Check active tab on transformation dialog and call correct handler
+        '''
         tab_name, tab = self.transform_dialog.active_tab()
         target = self.transform_dialog.target_obj_lbl.text()
 
         obj = None
-        
+
         for o in self.objects_list:
             if o.name == target:
                 obj = o
                 break
 
-        if obj is None: ##obj not found
+        if obj is None:  # obj not found
             raise Exception('Target object not found: ' + target)
 
-        if tab_name == "Move" :
+        if tab_name == "Move":
             self.transform_move(obj, tab)
 
         elif tab_name == "Rotate":
             self.transform_rotate(obj, tab)
 
-        else: ##tab_name == "Rescale"
+        else:  # tab_name == "Rescale"
             self.transform_rescale(obj, tab)
 
         self.transform_dialog.reset_values()
@@ -436,65 +450,61 @@ class Controller:
         self.process_viewport()
 
     def reject_transformation_handler(self):
+        '''Reset dialog'''
         self.transform_dialog.setVisible(False)
         self.transform_dialog.reset_values()
-    
 
     # Functions responsible for transforming objects
 
     def transform_move(self, obj, tab):
+        '''Apply move/translation transformation'''
         transformator = Transformator(obj)
 
         x = float(tab.x_input.text())
         y = float(tab.y_input.text())
-        #z = float(tab.z_input.text())
+        # z = float(tab.z_input.text())
         option = tab.option_label.text()
 
-        if option == "Point":
-            new_obj = transformator.translate(x, y)
-        else: #option == "Vector"
-            pass
-        
-        ## inserting new obj in the same index as the transformed obj
+        if option == "Vector":
+            new_obj = transformator.translate_by_vector(x, y)
+        else:  # option == "Point"
+            new_obj = transformator.translate_to_point(x, y)
+
+        # inserting new obj in the same index as the transformed obj
         index = self.objects_list.index(obj)
         self.objects_list.pop(index)
         self.objects_list.insert(index, new_obj)
-        
-    
+
     def transform_rotate(self, obj, tab):
+        '''Apply rotate transformation'''
         transformator = Transformator(obj)
-        option = tab.ref_lbl.text()
         angle = float(tab.degrees_input.text())
 
         if tab.over_obj_center_radio_btn.isChecked():
             new_obj = transformator.rotate_by_degrees_geometric_center(angle)
-            
+
         elif tab.over_world_center_radio_btn.isChecked():
             new_obj = transformator.rotate_by_degrees_origin(angle)
-            
-        else: # tab.over_point_radio_btn.isChecked()
+
+        else:  # tab.over_point_radio_btn.isChecked()
             x = float(tab.x_input.text())
             y = float(tab.y_input.text())
-            z = 0 #float(tab.z_input.text())
-            new_obj = transformator.rotate_by_degrees_point(angle, Point3D('rotationPoint', x, y, z))
-            
+            z = 0  # float(tab.z_input.text())
+            new_obj = transformator.rotate_by_degrees_point(
+                angle, Point3D('rotationPoint', x, y, z))
 
-
-        ## inserting new obj in the same index as the transformed obj
+        # inserting new obj in the same index as the transformed obj
         index = self.objects_list.index(obj)
         self.objects_list.pop(index)
         self.objects_list.insert(index, new_obj)
-    
+
     def transform_rescale(self, obj, tab):
+        '''Apply scaling transformation'''
         scale_factor = float(tab.factor_input.text())
         transformator = Transformator(obj)
         new_obj = transformator.scale(scale_factor, scale_factor)
 
-        ## inserting new obj in the same index as the transformed obj
+        # inserting new obj in the same index as the transformed obj
         index = self.objects_list.index(obj)
         self.objects_list.pop(index)
         self.objects_list.insert(index, new_obj)
-
-    
-
-

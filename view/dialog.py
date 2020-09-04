@@ -5,7 +5,7 @@ class NewObjectDialog(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
 
-        self.numeric_validator = QtGui.QIntValidator(0, 1000)
+        self.numeric_validator = QtGui.QIntValidator(-1000, 1000)
 
         self.initUi()
 
@@ -75,7 +75,7 @@ class LineTab(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
 
-        self.numeric_validator = QtGui.QIntValidator(0, 1000)
+        self.numeric_validator = QtGui.QIntValidator(-1000, 1000)
 
         self.start_lbl = QtWidgets.QLabel(self)
         self.start_lbl.setGeometry(QtCore.QRect(10, 10, 191, 16))
@@ -156,7 +156,7 @@ class PointTab(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
 
-        self.numeric_validator = QtGui.QIntValidator(0, 1000)
+        self.numeric_validator = QtGui.QIntValidator(-1000, 1000)
 
         self.z_lbl_pt = QtWidgets.QLabel(self)
         self.z_lbl_pt.setGeometry(QtCore.QRect(160, 30, 21, 16))
@@ -210,7 +210,7 @@ class WireframeTab(QtWidgets.QWidget):
 
         self.points_list = []
 
-        self.numeric_validator = QtGui.QIntValidator(0, 1000)
+        self.numeric_validator = QtGui.QIntValidator(-1000, 1000)
 
         self.points_view = QtWidgets.QListView(self)
         self.points_view.setGeometry(QtCore.QRect(160, 10, 200, 150))
@@ -261,10 +261,10 @@ class WireframeTab(QtWidgets.QWidget):
         self.add_point_btn.setGeometry(QtCore.QRect(30, 130, 100, 40))
         self.add_point_btn.setText('Add point')
 
-        #self.add_point_btn.clicked.connect(self.add_point_btn_clicked)
+        # self.add_point_btn.clicked.connect(self.add_point_btn_clicked)
 
         self.add_point_btn.clicked.connect(self.__add_input_values_to_list)
-    
+
     def __add_input_values_to_list(self):
 
         try:
@@ -285,7 +285,6 @@ class WireframeTab(QtWidgets.QWidget):
         item = QtGui.QStandardItem(f'({x}, {y}, {z})')
         item.setEditable(False)
         self.points_model.appendRow(item)
-        
 
     def add_point_btn_clicked(self):
         self.dialog = QtWidgets.QDialog(self)
