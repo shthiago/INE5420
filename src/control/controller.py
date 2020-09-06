@@ -271,20 +271,20 @@ class Controller:
         offsety = window_size_y * step/100
 
         if mode == 'up':
-            self.yvp_max += offsety
-            self.yvp_min += offsety
+            self.window_ymax += offsety
+            self.window_ymin += offsety
 
         elif mode == 'down':
-            self.yvp_max -= offsety
-            self.yvp_min -= offsety
+            self.window_ymax -= offsety
+            self.window_ymin -= offsety
 
         elif mode == 'right':
-            self.xvp_max -= offsetx
-            self.xvp_min -= offsetx
+            self.window_xmax -= offsetx
+            self.window_xmin -= offsetx
 
         elif mode == 'left':
-            self.xvp_max += offsetx
-            self.xvp_min += offsetx
+            self.window_xmax += offsetx
+            self.window_xmin += offsetx
 
         self.process_viewport()
 
