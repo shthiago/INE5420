@@ -2,6 +2,7 @@
 from typing import List, Union
 from math import cos, sin, radians
 from statistics import mean
+from copy import deepcopy
 
 import numpy as np
 from src.model.objects import Point3D, Line, Wireframe
@@ -13,7 +14,6 @@ def transform(points: List[Point3D], matrix: np.ndarray) -> List[Point3D]:
 
     for point in points:
         np_point = np.array([point.x, point.y, 1])
-
         new_point = np_point.dot(matrix)
 
         new_points.append(Point3D(
@@ -453,12 +453,12 @@ class Transformator:
             scale_y=scale_y
         )
 
-        line = Line(
-            name=self._object.name,
-            p1=new_points[0],
-            p2=new_points[1]
-        )
-        line.color = self._object.color
+        line = self._intern_copy()
+        if not isinstance(line, Line):
+            raise TypeError('Internal object is not line')
+
+        line.p1 = new_points[0]
+        line.p2 = new_points[1]
         return line
 
     def _scale_wireframe(self, scale_x: float, scale_y: float) -> Wireframe:
@@ -474,9 +474,92 @@ class Transformator:
             scale_y=scale_y
         )
 
-        wireframe = Wireframe(
-            name=self._object.name,
-            points=new_points
-        )
-        wireframe.color = self._object.color
+        wireframe = self._intern_copy()
+        if not isinstance(wireframe, Wireframe):
+            raise TypeError('Internal object is not wireframe')
+
+        wireframe.points = new_points
         return wireframe
+
+    def _intern_copy(self) -> Union[Point3D, Line, Wireframe]:
+        '''Return deepcopy of internal object'''
+        return deepcopy(self._object)
+
+
+class Normalizer:
+    '''Object to hold information to normalize coordinateds'''
+
+    def __init__(self, window_center: Point3D, window_height: int,
+                 window_width: int, vup_angle: int):
+        '''Take the window measurements and v_up_angle to
+            keep as internal values'''
+        self._vup_angle: int = vup_angle
+        self._window_center: Point3D = window_center
+        self._window_height: int = window_height
+        self._window_width: int = window_width
+
+        self._normalization_matrix = self._mount_normalization_matrix()
+
+    def _mount_normalization_matrix(self):
+        '''Base on angle and window center, get the
+            transformation matrix'''
+        return concat_transformation_matrixes([
+            get_translation_matrix(-self._window_center.x,
+                                   -self._window_center.y),
+            get_rotation_matrix_from_degrees(self._vup_angle),
+            get_scaling_matrix(1/self._window_width, 1/self._window_height)
+        ])
+
+    def normalize_objects(self, objects: List[Union[Point3D, Line, Wireframe]]
+                          ) -> List[Union[Point3D, Line, Wireframe]]:
+        '''Return objects in the normalized coordinates'''
+        normalized_objects: List[Union[Point3D, Line, Wireframe]] = []
+
+        for obj in objects:
+            normalized_objects.append(self.normalize_object(obj))
+
+        return normalized_objects
+
+    def normalize_object(self, obj: Union[Point3D, Line, Wireframe]
+                         ) -> Union[Point3D, Line, Wireframe]:
+        '''Direct a object to be transformed by specific function'''
+        if isinstance(obj, Point3D):
+            return self._normalize_point(obj)
+
+        if isinstance(obj, Line):
+            return self._normalize_line(obj)
+
+        if isinstance(obj, Wireframe):
+            return self._normalize_wireframe(obj)
+
+        raise TypeError(f'Invaldi type for normalization: {obj}')
+
+    def _normalize_point(self, point: Point3D) -> Point3D:
+        '''Apply transformation to single point'''
+        return transform([point], self._normalization_matrix)[0]
+
+    def _normalize_line(self, line: Line) -> Line:
+        '''Apply normalizato to line'''
+        points = transform(line.points, self._normalization_matrix)
+
+        new_line = deepcopy(line)
+        if not isinstance(new_line, Line):
+            raise TypeError('Internal object is not line')
+
+        new_line.p1 = points[0]
+        new_line.p2 = points[1]
+
+        return new_line
+
+    def _normalize_wireframe(self, wireframe: Wireframe) -> Wireframe:
+        '''Apply normalization to wireframe'''
+        points = transform(wireframe.points, self._normalization_matrix)
+
+        new_wireframe = deepcopy(wireframe)
+
+        if not isinstance(new_wireframe, Wireframe):
+            raise TypeError('Internal object is not wireframe')
+
+        new_wireframe.points = points
+
+        return new_wireframe

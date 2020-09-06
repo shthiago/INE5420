@@ -297,6 +297,7 @@ class TransformationDialog(QtWidgets.QDialog):
         self.initUi()
 
     def initUi(self):
+        '''Initialize elements for dialog'''
         self.resize(400, 300)
         self.setWindowTitle("Apply transformation")
         self.buttonBox = QtWidgets.QDialogButtonBox(self)
@@ -344,6 +345,7 @@ class TransformationDialog(QtWidgets.QDialog):
         return active_tab_name, active_tab
 
     def reset_values(self):
+        '''Reset dialog values'''
         self.rescale_tab.reset_values()
         self.rotate_tab.reset_values()
         self.move_tab.reset_values()
@@ -405,6 +407,7 @@ class MoveTab(QtWidgets.QWidget):
         # self.z_input.setValidator(self.numeric_validator)
 
     def reset_values(self):
+        '''Reset dialog values'''
         self.x_input.clear()
         self.y_input.clear()
         # self.z_input.clear()
@@ -494,6 +497,7 @@ class RotateTab(QtWidgets.QWidget):
         self.degrees_input.setValidator(self.degree_validator)
 
     def reset_values(self):
+        '''Reset dialog values'''
         self.x_input.clear()
         self.y_input.clear()
         # self.z_input.clear()
@@ -522,4 +526,5 @@ class RescaleTab(QtWidgets.QWidget):
         self.factor_input.setValidator(self.double_validator)
 
     def reset_values(self):
+        '''Reset dialog values'''
         self.factor_input.clear()

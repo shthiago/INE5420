@@ -26,6 +26,9 @@ class Point3D(BaseNamedColoredObject):
         self.z: float = z
         self.thickness = thickness
 
+    def __repr__(self):
+        return f'({self.x}, {self.y}, {self.z})'
+
 
 class Line(BaseNamedColoredObject):
     """

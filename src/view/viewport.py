@@ -1,7 +1,7 @@
 '''Viewport object, used to draw objects into user interface'''
 from typing import List
 
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5 import QtWidgets, QtGui
 
 from src.model.objects import ViewportObjectRepresentation
 
@@ -39,7 +39,7 @@ class ViewPort(QtWidgets.QLabel):
         self.objects = objects
         self.update()
 
-    def paintEvent(self, event: QtGui.QPaintEvent):
+    def paintEvent(self, _event: QtGui.QPaintEvent):
         '''Reimplementing paint event function, that is called by update'''
 
         painter = QtGui.QPainter()

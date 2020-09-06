@@ -1,9 +1,8 @@
+'''Cotroller class'''
 import sys
-from typing import List
+from typing import List, Union
 
-from PyQt5.QtWidgets import QApplication, QMessageBox, QAction, QColorDialog
-from PyQt5.QtGui import QPalette, QColor
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QMessageBox, QColorDialog
 
 from src.view.main_window import MainWindow
 from src.view.dialog import NewObjectDialog, TransformationDialog
@@ -11,7 +10,7 @@ from src.view.object_item import ObjectItem
 from src.model import new_object_factory
 from src.model.objects import Point3D, Line, Wireframe
 from src.model.objects import ViewportObjectRepresentation
-from src.control.transform import Transformator
+from src.control.transform import Transformator, Normalizer
 
 
 class Controller:
@@ -21,26 +20,29 @@ class Controller:
 
     def __init__(self):
         # Init the models structure
-        self.objects_list = []
+        self.display_file = []
+
+        # Angle between the Vup vector and the world Y axis
+        self._vup_angle_degrees = 0
 
         # Init main interface
         self.app = QApplication(sys.argv)
 
         self.main_window = MainWindow()
         self.main_window.show()
-        self.add_main_window_handlers()
+        self._add_main_window_handlers()
 
         # Instantiate dialog for adding objects
         self.add_object_dialog = NewObjectDialog()
         self.add_object_dialog.show()
         self.add_object_dialog.setVisible(False)
-        self.add_new_obj_dialog_handlers()
+        self._add_new_obj_dialog_handlers()
 
         # Instantiate dialog to input transformations
         self.transform_dialog = TransformationDialog()
         self.transform_dialog.show()
         self.transform_dialog.setVisible(False)
-        self.add_transform_dialog_handlers()
+        self._add_transform_dialog_handlers()
 
         # Initial window settings
         self.window_xmin = -300
@@ -54,6 +56,7 @@ class Controller:
         self.xvp_max = 600
         self.yvp_max = 600
 
+        # Mock object
         self.add_object_to_list(
             Wireframe(name='Cubinho daora', points=[
                 Point3D('', 0, 0, 0),
@@ -71,7 +74,7 @@ class Controller:
             ])
         )
 
-        self.process_viewport()
+        self._process_viewport()
 
     def run(self):
         """
@@ -79,25 +82,25 @@ class Controller:
         """
         self.app.exec()
 
-    def add_object_handler(self):
+    def _add_object_handler(self):
         """
         Function to execute when action to create a button is called
         """
         self.add_object_dialog.setVisible(True)
 
-    def add_new_obj_dialog_handlers(self):
+    def _add_new_obj_dialog_handlers(self):
         """
         Add any needed handler to add objects dialog
         """
         # If "Ok" pressed, process data to add object
         self.add_object_dialog.buttonBox.accepted.connect(
-            self.dialog_accepted_handler)
+            self._dialog_accepted_handler)
 
         # If "Cancel" pressed, just closes the dialog
         self.add_object_dialog.buttonBox.rejected.connect(
-            self.dialog_rejected_handler)
+            self._dialog_rejected_handler)
 
-    def add_transform_dialog_handlers(self):
+    def _add_transform_dialog_handlers(self):
         """
         Add any needed handler to input transformations parameters dialog
         """
@@ -109,7 +112,7 @@ class Controller:
             self.reject_transformation_handler
         )
 
-    def dialog_accepted_handler(self):
+    def _dialog_accepted_handler(self):
         """
         Function to be called on accepted option at dialog
         """
@@ -120,7 +123,7 @@ class Controller:
         if not obj_name:
             obj_name = self.create_unique_obj_name(tab_name)
 
-        elif not self.validate_new_name(obj_name):
+        elif not self._validate_new_name(obj_name):
             # Popup to  notify user, then return to dialog
             QMessageBox.information(
                 self.add_object_dialog,
@@ -138,7 +141,7 @@ class Controller:
             self.add_object_to_list(new_object)
             self.add_object_dialog.reset_values()
             self.add_object_dialog.setVisible(False)
-            self.process_viewport()
+            self._process_viewport()
 
         else:
             QMessageBox.information(
@@ -149,7 +152,7 @@ class Controller:
             )
             return
 
-    def validate_new_name(self, name):
+    def _validate_new_name(self, name):
         """
         Validate name based on existing objects on objects list
 
@@ -157,25 +160,25 @@ class Controller:
         ----------
         True if name can be used, False otherwise
         """
-        names = [o.name for o in self.objects_list]
+        names = [o.name for o in self.display_file]
         return not name in names
 
-    def dialog_rejected_handler(self):
+    def _dialog_rejected_handler(self):
         """
         Function to be called on rejected option at dialog
         """
         self.add_object_dialog.reset_values()
         self.add_object_dialog.setVisible(False)
 
-    def add_main_window_handlers(self):
+    def _add_main_window_handlers(self):
         """
         Connect triggers on main window
         """
         self.main_window.actionAdd_object.triggered.connect(
-            self.add_object_handler)
+            self._add_object_handler)
 
         self.main_window.in_btn.clicked.connect(
-            lambda: self.zoom_handler('in'))
+            lambda: self._zoom_handler('in'))
 
         # self.main_window.zoom_in_btn.clicked.connect(
         #     lambda: )
@@ -186,20 +189,26 @@ class Controller:
         # self.main_window.set_window_btn.clicked.connect(
         #     lambda: )
 
+        self.main_window.rotate_left.clicked.connect(
+            lambda: self._rotate_handler('left'))
+
+        self.main_window.rotate_right.clicked.connect(
+            lambda: self._rotate_handler('right'))
+
         self.main_window.out_btn.clicked.connect(
-            lambda: self.zoom_handler('out'))
+            lambda: self._zoom_handler('out'))
 
         self.main_window.view_up_btn.clicked.connect(
-            lambda: self.window_move_handler('up'))
+            lambda: self._window_move_handler('up'))
 
         self.main_window.view_down_btn.clicked.connect(
-            lambda: self.window_move_handler('down'))
+            lambda: self._window_move_handler('down'))
 
         self.main_window.view_left_btn.clicked.connect(
-            lambda: self.window_move_handler('left'))
+            lambda: self._window_move_handler('left'))
 
         self.main_window.view_right_btn.clicked.connect(
-            lambda: self.window_move_handler('right'))
+            lambda: self._window_move_handler('right'))
 
         # self.main_window.rotate_x_btn.clicked.connect(
         #     lambda: )
@@ -211,13 +220,35 @@ class Controller:
         #     lambda: )
 
         self.main_window.color_change_action.triggered.connect(
-            self.color_picker_dialog)
+            self._color_picker_dialog)
 
         self.main_window.open_transformation_dialog_action.triggered.connect(
-            self.transformation_dialog
+            self._transformation_dialog
         )
 
-    def color_picker_dialog(self):
+    def _rotate_handler(self, direction: str):
+        '''Change the vup vector angle'''
+        if direction not in ['left', 'right']:
+            raise ValueError(f'Invalid rotation direction: {direction}')
+
+        angle = int(self.main_window.rotation_degrees_input.text())
+
+        if direction == 'left':
+            self._rotate_left(angle)
+        else:
+            self._rotate_right(angle)
+
+        self._process_viewport()
+
+    def _rotate_left(self, angle: int):
+        '''Rotate vup to left'''
+        self._vup_angle_degrees -= angle
+
+    def _rotate_right(self, angle: int):
+        '''Rotate vup to right'''
+        self._vup_angle_degrees += angle
+
+    def _color_picker_dialog(self):
         """
         Pop up color picker window and apply new color to clicked object
         """
@@ -226,13 +257,13 @@ class Controller:
         color = QColorDialog.getColor()
 
         # Get object with same name as item clicked and change its color
-        for obj in self.objects_list:
+        for obj in self.display_file:
             if obj.name == item_name:
                 obj.color = color
                 break
-        self.process_viewport()
+        self._process_viewport()
 
-    def transformation_dialog(self):
+    def _transformation_dialog(self):
         """
         Open transformation dialog
         """
@@ -241,7 +272,7 @@ class Controller:
         self.transform_dialog.set_target_object(item_clicked.data())
         self.transform_dialog.setVisible(True)
 
-    def window_move_handler(self, mode: str):
+    def _window_move_handler(self, mode: str):
         """
         Take step value from input and apply window movementation
 
@@ -286,9 +317,9 @@ class Controller:
             self.window_xmax += offsetx
             self.window_xmin += offsetx
 
-        self.process_viewport()
+        self._process_viewport()
 
-    def zoom_handler(self, mode: str):
+    def _zoom_handler(self, mode: str):
         """
         Take step value from input and apply zoom
 
@@ -328,7 +359,7 @@ class Controller:
             self.window_ymin *= (1 + int(step/2)/100)
 
         # Update objects on viewport
-        self.process_viewport()
+        self._process_viewport()
 
     def create_unique_obj_name(self, tab_name):
         """
@@ -338,21 +369,21 @@ class Controller:
         i = 0
         while True:
             name = tab_name[0:2] + str(i).zfill(2)
-            if self.validate_new_name(name):
+            if self._validate_new_name(name):
                 return name
 
             i += 1
 
-    def add_object_to_list(self, object):
+    def add_object_to_list(self, obj):
         """
         Add new object to objects list and to view object list
         """
-        self.objects_list.append(object)
+        self.display_file.append(obj)
 
-        item = ObjectItem(object)
+        item = ObjectItem(obj)
         self.main_window.items_model.appendRow(item)
 
-    def process_viewport(self):
+    def _process_viewport(self):
         """
         Function to create the window that will be drew into viewport
         """
@@ -366,20 +397,22 @@ class Controller:
                      Point3D('_gy2', 1000, 0, 0),
                      thickness=1)]
 
+        normalized_display_file = self.get_normalized_display_file(grid=grid)
+
         transformed_groups_of_points: List[ViewportObjectRepresentation] = []
-        for obj in grid + self.objects_list:
+        for obj in normalized_display_file:
             if isinstance(obj, Point3D):
                 transformed_groups_of_points.append(
                     ViewportObjectRepresentation(
                         name=obj.name,
-                        points=[self.transform_point(obj)],
+                        points=[self.viewpoert_transform_point(obj)],
                         color=obj.color)
                 )
 
             else:
                 pts = []
                 for p in obj.points:
-                    pts.append(self.transform_point(p))
+                    pts.append(self.viewpoert_transform_point(p))
 
                 transformed_groups_of_points.append(
                     ViewportObjectRepresentation(name=obj.name,
@@ -389,7 +422,30 @@ class Controller:
                 )
         self.main_window.viewport.draw_objects(transformed_groups_of_points)
 
-    def transform_point(self, point: Point3D):
+    def get_normalized_display_file(self, grid: List[Line]
+                                    ) -> List[Union[Point3D, Line, Wireframe]]:
+        '''Take internal Vup vector and rotate grid and internal list of objects'''
+        objects_list = grid + self.display_file
+
+        window_center_x = (self.window_xmax + self.window_xmin)/2
+        window_center_y = (self.window_ymax + self.window_ymin)/2
+        window_width = self.window_ymax - self.window_ymin
+        window_height = self.window_xmax - self.window_xmin
+
+        print(self._vup_angle_degrees)
+        normalizer = Normalizer(
+            Point3D('_wc',
+                    x=window_center_x,
+                    y=window_center_y,
+                    z=0),
+            window_height,
+            window_width,
+            vup_angle=self._vup_angle_degrees
+        )
+
+        return normalizer.normalize_objects(objects_list)
+
+    def viewpoert_transform_point(self, point: Point3D):
         """
         Apply viewport transformation to a point
 
@@ -401,21 +457,24 @@ class Controller:
         ----------
         UnamedPoint3D(x, y) transformed to current viewport
         """
-        xw = point.x
-        yw = point.y
 
-        xwmax = self.window_xmax
-        ywmax = self.window_ymax
-        xwmin = self.window_xmin
-        ywmin = self.window_ymin
+        # xwmax = self.window_xmax
+        # ywmax = self.window_ymax
+        # xwmin = self.window_xmin
+        # ywmin = self.window_ymin
+        xwmax = 1
+        ywmax = 1
+        xwmin = -1
+        ywmin = -1
 
         xvpmax = self.xvp_max
         yvpmax = self.yvp_max
         xvpmin = self.xvp_min
         yvpmin = self.yvp_min
 
-        xvp = ((xw - xwmin)/(xwmax - xwmin)) * (xvpmax - xvpmin) - self.xvp_min
-        yvp = (1 - ((yw - ywmin)/(ywmax - ywmin))) * \
+        xvp = ((point.x - xwmin)/(xwmax - xwmin)) * \
+            (xvpmax - xvpmin) - self.xvp_min
+        yvp = (1 - ((point.y - ywmin)/(ywmax - ywmin))) * \
             (yvpmax - yvpmin) - self.yvp_min
 
         return Point3D(name=point.name, x=xvp, y=yvp, z=point.z)
@@ -428,7 +487,7 @@ class Controller:
 
         obj = None
 
-        for o in self.objects_list:
+        for o in self.display_file:
             if o.name == target:
                 obj = o
                 break
@@ -447,7 +506,7 @@ class Controller:
 
         self.transform_dialog.reset_values()
         self.transform_dialog.setVisible(False)
-        self.process_viewport()
+        self._process_viewport()
 
     def reject_transformation_handler(self):
         '''Reset dialog'''
@@ -471,9 +530,9 @@ class Controller:
             new_obj = transformator.translate_to_point(x, y)
 
         # inserting new obj in the same index as the transformed obj
-        index = self.objects_list.index(obj)
-        self.objects_list.pop(index)
-        self.objects_list.insert(index, new_obj)
+        index = self.display_file.index(obj)
+        self.display_file.pop(index)
+        self.display_file.insert(index, new_obj)
 
     def transform_rotate(self, obj, tab):
         '''Apply rotate transformation'''
@@ -494,9 +553,9 @@ class Controller:
                 angle, Point3D('rotationPoint', x, y, z))
 
         # inserting new obj in the same index as the transformed obj
-        index = self.objects_list.index(obj)
-        self.objects_list.pop(index)
-        self.objects_list.insert(index, new_obj)
+        index = self.display_file.index(obj)
+        self.display_file.pop(index)
+        self.display_file.insert(index, new_obj)
 
     def transform_rescale(self, obj, tab):
         '''Apply scaling transformation'''
@@ -505,6 +564,6 @@ class Controller:
         new_obj = transformator.scale(scale_factor, scale_factor)
 
         # inserting new obj in the same index as the transformed obj
-        index = self.objects_list.index(obj)
-        self.objects_list.pop(index)
-        self.objects_list.insert(index, new_obj)
+        index = self.display_file.index(obj)
+        self.display_file.pop(index)
+        self.display_file.insert(index, new_obj)
