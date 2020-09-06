@@ -56,7 +56,7 @@ class Wireframe(BaseNamedColoredObject):
 
 
 class ViewportObjectRepresentation(NamedTuple):
-    '''Class to hold data of a object ready to be draw at viewport'''
+    '''Class to hold data of a object ready to be drawn at viewport'''
     name: str
     points: List[Point3D]
     color: QColor
