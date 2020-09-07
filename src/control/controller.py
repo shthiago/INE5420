@@ -1,6 +1,7 @@
 '''Cotroller class'''
 import sys
 from typing import List, Union
+from math import cos, sin, radians
 
 from PyQt5.QtWidgets import QApplication, QMessageBox, QColorDialog
 
@@ -296,26 +297,57 @@ class Controller:
             )
             return
 
+
         window_size_x = self.window_xmax - self.window_xmin
         window_size_y = self.window_ymax - self.window_ymin
         offsetx = window_size_x * step/100
         offsety = window_size_y * step/100
 
-        if mode == 'up':
-            self.window_ymax += offsety
-            self.window_ymin += offsety
 
-        elif mode == 'down':
-            self.window_ymax -= offsety
-            self.window_ymin -= offsety
+        if mode == 'down':
+            rad_angle = radians(180 - self._vup_angle_degrees)
+            sen_vup = sin(rad_angle)
+            cos_vup = cos(rad_angle)
+
+            self.window_ymax -= offsety*cos(rad_angle)
+            self.window_ymin -= offsety*cos(rad_angle)
+
+            self.window_xmax -= offsety*sin(rad_angle)
+            self.window_xmin -= offsety*sin(rad_angle)
+
+
+        elif mode == 'up':
+            rad_angle = radians(180 - self._vup_angle_degrees)
+            sen_vup = sin(rad_angle)
+            cos_vup = cos(rad_angle)
+
+            self.window_ymax += offsety*cos(rad_angle)
+            self.window_ymin += offsety*cos(rad_angle)
+
+            self.window_xmax += offsety*sin(rad_angle)
+            self.window_xmin += offsety*sin(rad_angle)
 
         elif mode == 'right':
-            self.window_xmax -= offsetx
-            self.window_xmin -= offsetx
+            rad_angle = radians(self._vup_angle_degrees)
+            sen_vup = sin(rad_angle)
+            cos_vup = cos(rad_angle)
+
+            self.window_xmax -= offsetx*cos_vup
+            self.window_xmin -= offsetx*cos_vup
+
+            self.window_ymax -= offsetx*sen_vup
+            self.window_ymin -= offsetx*sen_vup
 
         elif mode == 'left':
-            self.window_xmax += offsetx
-            self.window_xmin += offsetx
+            rad_angle = radians(self._vup_angle_degrees)
+            sen_vup = sin(rad_angle)
+            cos_vup = cos(rad_angle)
+
+            self.window_xmax += offsetx*cos_vup
+            self.window_xmin += offsetx*cos_vup
+
+            self.window_ymax += offsetx*sen_vup
+            self.window_ymin += offsetx*sen_vup
 
         self._process_viewport()
 
