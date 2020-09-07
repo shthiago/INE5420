@@ -50,8 +50,12 @@ class Point3D(BaseNamedColoredObject):
         point_index = points.index((self.x, self.y, self.z)) + 1
         return ['# Point3D',
                 f'o {self.name}',
-                f'usemtl {self.color.name()}',
+                f'usemtl {self.color.name()[1:]}',
                 f'p {point_index}']
+
+    def as_tuple(self):
+        '''Return point as (x, y, x)'''
+        return (self.x, self.y, self.z)
 
 
 class Line(BaseNamedColoredObject):
@@ -72,17 +76,17 @@ class Line(BaseNamedColoredObject):
 
     def as_list_of_tuples(self) -> List[Tuple[float, float, float]]:
         '''Return points as [(x, y, z)]'''
-        return [(p.x, p.y, p.z) for p in self.points]
+        return [p.as_tuple() for p in self.points]
 
     def describe_export_with(self, points: List[Tuple[float, float, float]],
                              colors: List[QColor]) -> List[str]:
         '''Return lines that describe object in .obj file, using indexes
         from points and names from colors'''
-        index_p1 = points.index(self.p1) + 1
-        index_p2 = points.index(self.p2) + 1
+        index_p1 = points.index(self.p1.as_tuple()) + 1
+        index_p2 = points.index(self.p2.as_tuple()) + 1
         return ['# Line',
                 f'o {self.name}',
-                f'usemtl {self.color.name()}',
+                f'usemtl {self.color.name()[1:]}',
                 f'l {index_p1} {index_p2}', ]
 
 
@@ -98,7 +102,7 @@ class Wireframe(BaseNamedColoredObject):
 
     def as_list_of_tuples(self) -> List[Tuple[float, float, float]]:
         '''Return points as [(x, y, z)]'''
-        return [(p.x, p.y, p.z) for p in self.points]
+        return [p.as_tuple() for p in self.points]
 
     def describe_export_with(self, points: List[Tuple[float, float, float]],
                              colors: List[QColor]) -> List[str]:
@@ -107,7 +111,7 @@ class Wireframe(BaseNamedColoredObject):
         indexes = [str(points.index(p) + 1) for p in self.as_list_of_tuples()]
         return ['# Wireframe',
                 f'o {self.name}',
-                f'usemtl {self.color.name()}',
+                f'usemtl {self.color.name()[1:]}',
                 f'f {" ".join(indexes)}']
 
 

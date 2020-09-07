@@ -277,7 +277,7 @@ class Controller:
             green = color.green()/255
             blue = color.blue()/255
             materials.extend([
-                f'newmtl {color.name()}',
+                f'newmtl {color.name()[1:]}',
                 f'Kd {red} {green} {blue}'
             ])
 
@@ -296,9 +296,9 @@ class Controller:
         colors = []
         color_names = []
         for obj in self.display_file:
-            if obj.color.name() not in color_names:
+            if obj.color.name()[1:] not in color_names:
                 colors.append(obj.color)
-                color_names.append(obj.color.name())
+                color_names.append(obj.color.name()[1:])
 
         return colors
 
@@ -482,7 +482,8 @@ class Controller:
                     ViewportObjectRepresentation(
                         name=obj.name,
                         points=[self.viewpoert_transform_point(obj)],
-                        color=obj.color)
+                        color=obj.color,
+                        thickness=obj.thickness)
                 )
 
             else:
