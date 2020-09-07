@@ -309,11 +309,11 @@ class Controller:
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_ymax -= offsety*cos(rad_angle)
-            self.window_ymin -= offsety*cos(rad_angle)
+            self.window_ymax += offsety*cos(rad_angle)
+            self.window_ymin += offsety*cos(rad_angle)
 
-            self.window_xmax -= offsety*sin(rad_angle)
-            self.window_xmin -= offsety*sin(rad_angle)
+            self.window_xmax += offsety*sin(rad_angle)
+            self.window_xmin += offsety*sin(rad_angle)
 
 
         elif mode == 'up':
@@ -321,24 +321,13 @@ class Controller:
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_ymax += offsety*cos(rad_angle)
-            self.window_ymin += offsety*cos(rad_angle)
+            self.window_ymax -= offsety*cos(rad_angle)
+            self.window_ymin -= offsety*cos(rad_angle)
 
-            self.window_xmax += offsety*sin(rad_angle)
-            self.window_xmin += offsety*sin(rad_angle)
+            self.window_xmax -= offsety*sin(rad_angle)
+            self.window_xmin -= offsety*sin(rad_angle)
 
         elif mode == 'right':
-            rad_angle = radians(self._vup_angle_degrees)
-            sen_vup = sin(rad_angle)
-            cos_vup = cos(rad_angle)
-
-            self.window_xmax -= offsetx*cos_vup
-            self.window_xmin -= offsetx*cos_vup
-
-            self.window_ymax -= offsetx*sen_vup
-            self.window_ymin -= offsetx*sen_vup
-
-        elif mode == 'left':
             rad_angle = radians(self._vup_angle_degrees)
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
@@ -348,6 +337,17 @@ class Controller:
 
             self.window_ymax += offsetx*sen_vup
             self.window_ymin += offsetx*sen_vup
+
+        elif mode == 'left':
+            rad_angle = radians(self._vup_angle_degrees)
+            sen_vup = sin(rad_angle)
+            cos_vup = cos(rad_angle)
+
+            self.window_xmax -= offsetx*cos_vup
+            self.window_xmin -= offsetx*cos_vup
+
+            self.window_ymax -= offsetx*sen_vup
+            self.window_ymin -= offsetx*sen_vup
 
         self._process_viewport()
 
