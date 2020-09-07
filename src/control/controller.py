@@ -1,8 +1,11 @@
 '''Cotroller class'''
 import sys
-from typing import List, Union
+import os
+from typing import List, Union, Tuple, Set
 
-from PyQt5.QtWidgets import QApplication, QMessageBox, QColorDialog
+from PyQt5.QtWidgets import (QApplication, QMessageBox,
+                             QColorDialog, QFileDialog)
+from PyQt5.QtGui import QColor
 
 from src.view.main_window import MainWindow
 from src.view.dialog import NewObjectDialog, TransformationDialog
@@ -58,21 +61,25 @@ class Controller:
 
         # Mock object
         self.add_object_to_list(
-            Wireframe(name='Cubinho daora', points=[
+            Wireframe(name='Face1', points=[
                 Point3D('', 0, 0, 0),
                 Point3D('', 100, 0, 0),
                 Point3D('', 100, 100, 0),
-                Point3D('', 0, 100, 0),
-                Point3D('', 0, 0, 0),
+                Point3D('', 0, 100, 0)]))
+
+        self.add_object_to_list(
+            Wireframe(name='Face2', points=[
                 Point3D('', 100, 0, 0),
                 Point3D('', 150, 50, 0),
                 Point3D('', 150, 150, 0),
-                Point3D('', 100, 100, 0),
-                Point3D('', 150, 150, 0),
-                Point3D('', 50, 150, 0),
+                Point3D('', 100, 100, 0)]))
+
+        self.add_object_to_list(
+            Wireframe(name='Face3', points=[
                 Point3D('', 0, 100, 0),
-            ])
-        )
+                Point3D('', 50, 150, 0),
+                Point3D('', 150, 150, 0),
+                Point3D('', 100, 100, 0)]))
 
         self._process_viewport()
 
@@ -174,8 +181,11 @@ class Controller:
         """
         Connect triggers on main window
         """
-        self.main_window.actionAdd_object.triggered.connect(
+        self.main_window.action_add_object.triggered.connect(
             self._add_object_handler)
+
+        self.main_window.action_export_all_objects.triggered.connect(
+            self._export_all_objects_handler)
 
         self.main_window.in_btn.clicked.connect(
             lambda: self._zoom_handler('in'))
@@ -225,6 +235,72 @@ class Controller:
         self.main_window.open_transformation_dialog_action.triggered.connect(
             self._transformation_dialog
         )
+
+    def _export_all_objects_handler(self):
+        '''Get a folder from user and call the effective export function'''
+        folder = QFileDialog.getExistingDirectory()
+        self._export_objects_to(folder)
+
+    def _export_objects_to(self, folder: str):
+        '''Save objects generated structure to files in files inside folder'''
+        shapefile, materials = self._generate_export_files()
+
+        shapefile_filename = 'shapefile.obj'
+        materials_filename = 'materials.mtl'
+
+        shapefile.insert(0, f'mtllib {materials_filename}')
+
+        with open(os.path.join(folder, shapefile_filename), 'w') as f:
+            for row in shapefile:
+                f.write(row + '\n')
+
+        with open(os.path.join(folder, materials_filename), 'w') as f:
+            for row in materials:
+                f.write(row + '\n')
+
+    def _generate_export_files(self) -> Tuple[List[str], List[str]]:
+        '''Generate list of points and object session for each object'''
+        points = self._collect_all_points()
+        colors = self._collect_all_colors()
+
+        shapefile = ['# Vertexes']
+        for point in points:
+            shapefile.append(f'v {point[0]}, {point[1]} {point[2]}')
+
+        shapefile += ['', '# Shapes']
+        for obj in self.display_file:
+            shapefile.extend(obj.describe_export_with(points, colors))
+
+        materials = ['# Materials lib']
+        for color in colors:
+            red = color.red()/255
+            green = color.green()/255
+            blue = color.blue()/255
+            materials.extend([
+                f'newmtl {color.name()}',
+                f'Kd {red} {green} {blue}'
+            ])
+
+        return shapefile, materials
+
+    def _collect_all_points(self) -> List[Tuple[float, float, float]]:
+        '''Read all unique used points by every object'''
+        points = set()
+        for obj in self.display_file:
+            points.update(obj.as_list_of_tuples())
+
+        return list(points)
+
+    def _collect_all_colors(self) -> List[QColor]:
+        '''Read all colors in objects'''
+        colors = []
+        color_names = []
+        for obj in self.display_file:
+            if obj.color.name() not in color_names:
+                colors.append(obj.color)
+                color_names.append(obj.color.name())
+
+        return colors
 
     def _rotate_handler(self, direction: str):
         '''Change the vup vector angle'''
@@ -432,7 +508,6 @@ class Controller:
         window_width = self.window_ymax - self.window_ymin
         window_height = self.window_xmax - self.window_xmin
 
-        print(self._vup_angle_degrees)
         normalizer = Normalizer(
             Point3D('_wc',
                     x=window_center_x,

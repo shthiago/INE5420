@@ -165,27 +165,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menubar = QtWidgets.QMenuBar(self)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 20))
 
-        self.menuFile = QtWidgets.QMenu(self.menubar)
-        self.menuFile.setTitle("File")
+        self.menu_file = QtWidgets.QMenu(self.menubar)
+        self.menu_file.setTitle("File")
         self.setMenuBar(self.menubar)
+        self.menubar.addAction(self.menu_file.menuAction())
 
-        self.actionAdd_object = QtWidgets.QAction(self)
-        self.actionAdd_object.setText("Add object")
+        self.action_add_object = QtWidgets.QAction(self)
+        self.action_add_object.setText("Add object")
+        self.menu_file.addAction(self.action_add_object)
 
-        self.menubar.addAction(self.menuFile.menuAction())
-        self.menuFile.addAction(self.actionAdd_object)
+        self.action_export_all_objects = QtWidgets.QAction(self)
+        self.action_export_all_objects.setText("Export all")
+        self.menu_file.addAction(self.action_export_all_objects)
 
-        # qp.setPen(Qt.red)
-
-        # qp.drawPoint(10, 10)
-        # qp.drawPoint(10, 11)
-        # qp.drawPoint(10, 12)
-        # qp.drawPoint(10, 13)
-        # qp.drawPoint(10, 14)
-        # qp.drawPoint(10, 15)
-        # qp.drawPoint(10, 16)
-        #
-        # qp.end()
     def custom_context_menu(self, point):
         """
         Context menu for objects view list

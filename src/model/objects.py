@@ -1,7 +1,7 @@
 """
 File for modeling objects to be stored
 """
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Tuple, Set
 
 from PyQt5.QtGui import QColor
 
@@ -12,6 +12,16 @@ class BaseNamedColoredObject:
     def __init__(self, name: str, color: QColor):
         self.color: QColor = color
         self.name: str = name
+
+    def as_list_of_tuples(self) -> List[Tuple[float, float, float]]:
+        '''Return points as [(x, y, z)]'''
+        raise NotImplementedError()
+
+    def describe_export_with(self, points: List[Tuple[float, float, float]],
+                             colors: List[QColor]) -> List[str]:
+        '''Return lines that describe object in .obj file, using indexes
+        from points and names from colors'''
+        raise NotImplementedError()
 
 
 class Point3D(BaseNamedColoredObject):
@@ -28,6 +38,20 @@ class Point3D(BaseNamedColoredObject):
 
     def __repr__(self):
         return f'({self.x}, {self.y}, {self.z})'
+
+    def as_list_of_tuples(self) -> List[Tuple[float, float, float]]:
+        '''Return points as [(x, y, z)]'''
+        return [(self.x, self.y, self.z)]
+
+    def describe_export_with(self, points: List[Tuple[float, float, float]],
+                             colors: List[QColor]) -> List[str]:
+        '''Return lines that describe object in .obj file, using indexes
+        from points and names from colors'''
+        point_index = points.index((self.x, self.y, self.z)) + 1
+        return ['# Point3D',
+                f'o {self.name}',
+                f'usemtl {self.color.name()}',
+                f'p {point_index}']
 
 
 class Line(BaseNamedColoredObject):
@@ -46,6 +70,21 @@ class Line(BaseNamedColoredObject):
         '''Getter to get points from Line'''
         return [self.p1, self.p2]
 
+    def as_list_of_tuples(self) -> List[Tuple[float, float, float]]:
+        '''Return points as [(x, y, z)]'''
+        return [(p.x, p.y, p.z) for p in self.points]
+
+    def describe_export_with(self, points: List[Tuple[float, float, float]],
+                             colors: List[QColor]) -> List[str]:
+        '''Return lines that describe object in .obj file, using indexes
+        from points and names from colors'''
+        index_p1 = points.index(self.p1) + 1
+        index_p2 = points.index(self.p2) + 1
+        return ['# Line',
+                f'o {self.name}',
+                f'usemtl {self.color.name()}',
+                f'l {index_p1} {index_p2}', ]
+
 
 class Wireframe(BaseNamedColoredObject):
     """
@@ -56,6 +95,20 @@ class Wireframe(BaseNamedColoredObject):
         super().__init__(name, QColor(0, 0, 0))
         self.points = points
         self.thickness = thickness
+
+    def as_list_of_tuples(self) -> List[Tuple[float, float, float]]:
+        '''Return points as [(x, y, z)]'''
+        return [(p.x, p.y, p.z) for p in self.points]
+
+    def describe_export_with(self, points: List[Tuple[float, float, float]],
+                             colors: List[QColor]) -> List[str]:
+        '''Return lines that describe object in .obj file, using indexes
+        from points and names from colors'''
+        indexes = [str(points.index(p) + 1) for p in self.as_list_of_tuples()]
+        return ['# Wireframe',
+                f'o {self.name}',
+                f'usemtl {self.color.name()}',
+                f'f {" ".join(indexes)}']
 
 
 class ViewportObjectRepresentation(NamedTuple):
