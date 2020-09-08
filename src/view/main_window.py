@@ -178,6 +178,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.action_export_all_objects.setText("Export all")
         self.menu_file.addAction(self.action_export_all_objects)
 
+        self.action_import_wavefront = QtWidgets.QAction(self)
+        self.action_import_wavefront.setText("Import objects")
+        self.menu_file.addAction(self.action_import_wavefront)
+
     def custom_context_menu(self, point):
         """
         Context menu for objects view list

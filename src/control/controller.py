@@ -6,6 +6,7 @@ from typing import List, Union, Tuple, Set
 from PyQt5.QtWidgets import (QApplication, QMessageBox,
                              QColorDialog, QFileDialog)
 from PyQt5.QtGui import QColor
+from loguru import logger
 
 from src.view.main_window import MainWindow
 from src.view.dialog import NewObjectDialog, TransformationDialog
@@ -14,6 +15,7 @@ from src.model import new_object_factory
 from src.model.objects import Point3D, Line, Wireframe
 from src.model.objects import ViewportObjectRepresentation
 from src.control.transform import Transformator, Normalizer
+from src.tools.wavefront_reader import read_wavefront
 
 
 class Controller:
@@ -58,28 +60,6 @@ class Controller:
         self.yvp_min = 0
         self.xvp_max = 600
         self.yvp_max = 600
-
-        # Mock object
-        self.add_object_to_list(
-            Wireframe(name='Face1', points=[
-                Point3D('', 0, 0, 0),
-                Point3D('', 100, 0, 0),
-                Point3D('', 100, 100, 0),
-                Point3D('', 0, 100, 0)]))
-
-        self.add_object_to_list(
-            Wireframe(name='Face2', points=[
-                Point3D('', 100, 0, 0),
-                Point3D('', 150, 50, 0),
-                Point3D('', 150, 150, 0),
-                Point3D('', 100, 100, 0)]))
-
-        self.add_object_to_list(
-            Wireframe(name='Face3', points=[
-                Point3D('', 0, 100, 0),
-                Point3D('', 50, 150, 0),
-                Point3D('', 150, 150, 0),
-                Point3D('', 100, 100, 0)]))
 
         self._process_viewport()
 
@@ -187,26 +167,20 @@ class Controller:
         self.main_window.action_export_all_objects.triggered.connect(
             self._export_all_objects_handler)
 
+        self.main_window.action_import_wavefront.triggered.connect(
+            self._import_from_file_handler)
+
         self.main_window.in_btn.clicked.connect(
             lambda: self._zoom_handler('in'))
 
-        # self.main_window.zoom_in_btn.clicked.connect(
-        #     lambda: )
-
-        # self.main_window.zoom_out_btn.clicked.connect(
-        #     lambda: )
-
-        # self.main_window.set_window_btn.clicked.connect(
-        #     lambda: )
+        self.main_window.out_btn.clicked.connect(
+            lambda: self._zoom_handler('out'))
 
         self.main_window.rotate_left.clicked.connect(
             lambda: self._rotate_handler('left'))
 
         self.main_window.rotate_right.clicked.connect(
             lambda: self._rotate_handler('right'))
-
-        self.main_window.out_btn.clicked.connect(
-            lambda: self._zoom_handler('out'))
 
         self.main_window.view_up_btn.clicked.connect(
             lambda: self._window_move_handler('up'))
@@ -236,6 +210,49 @@ class Controller:
             self._transformation_dialog
         )
 
+    def _import_from_file_handler(self):
+        '''Get the .obj filepath and call the proper load functions'''
+        file = QFileDialog.getOpenFileName()[0]
+        self._import_from_file(file)
+        self._process_viewport()
+
+    def _import_from_file(self, file: str):
+        '''Call wavefront loaders'''
+        geoms = read_wavefront(file)
+
+        for name, props in geoms.items():
+            if not 'v' in props:
+                logger.error(f'Failed to load: {name}, no vertexes')
+                continue
+
+            points: List[Point3D] = []
+            for x, y, z in props['v']:
+                points.append(Point3D(name='', x=x, y=y, z=z))
+
+            color = QColor(0, 0, 0)
+            if 'material' in props and 'Kd' in props['material']:
+                r, g, b = props['material']['Kd']
+                color = QColor(255 * r, 255 * g, 255 * b)
+
+            if len(points) == 1:
+                # Is a point
+                point = points[0]
+                point.name = name
+                point.color = color
+                self.add_object_to_list(point)
+
+            elif len(points) == 2:
+                # Is a line
+                line = Line(name=name, p1=points[0], p2=points[1])
+                line.color = color
+                self.add_object_to_list(line)
+
+            elif len(points) > 2:
+                # Is a wireframe
+                wireframe = Wireframe(name=name, points=points)
+                wireframe.color = color
+                self.add_object_to_list(wireframe)
+
     def _export_all_objects_handler(self):
         '''Get a folder from user and call the effective export function'''
         folder = QFileDialog.getExistingDirectory()
@@ -243,15 +260,15 @@ class Controller:
 
     def _export_objects_to(self, folder: str):
         '''Save objects generated structure to files in files inside folder'''
-        shapefile, materials = self._generate_export_files()
+        wf_objects, materials = self._generate_export_files()
 
-        shapefile_filename = 'shapefile.obj'
+        wf_objects_filename = 'wf_objects.obj'
         materials_filename = 'materials.mtl'
 
-        shapefile.insert(0, f'mtllib {materials_filename}')
+        wf_objects.insert(0, f'mtllib {materials_filename}')
 
-        with open(os.path.join(folder, shapefile_filename), 'w') as f:
-            for row in shapefile:
+        with open(os.path.join(folder, wf_objects_filename), 'w') as f:
+            for row in wf_objects:
                 f.write(row + '\n')
 
         with open(os.path.join(folder, materials_filename), 'w') as f:
@@ -263,13 +280,13 @@ class Controller:
         points = self._collect_all_points()
         colors = self._collect_all_colors()
 
-        shapefile = ['# Vertexes']
+        wf_objects = ['# Vertexes']
         for point in points:
-            shapefile.append(f'v {point[0]}, {point[1]} {point[2]}')
+            wf_objects.append(f'v {point[0]} {point[1]} {point[2]}')
 
-        shapefile += ['', '# Shapes']
+        wf_objects += ['', '# Shapes']
         for obj in self.display_file:
-            shapefile.extend(obj.describe_export_with(points, colors))
+            wf_objects.extend(obj.describe_export_with(points, colors))
 
         materials = ['# Materials lib']
         for color in colors:
@@ -281,7 +298,7 @@ class Controller:
                 f'Kd {red} {green} {blue}'
             ])
 
-        return shapefile, materials
+        return wf_objects, materials
 
     def _collect_all_points(self) -> List[Tuple[float, float, float]]:
         '''Read all unique used points by every object'''

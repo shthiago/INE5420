@@ -37,7 +37,7 @@ class Point3D(BaseNamedColoredObject):
         self.thickness = thickness
 
     def __repr__(self):
-        return f'({self.x}, {self.y}, {self.z})'
+        return f'({self.x} {self.y} {self.z})'
 
     def as_list_of_tuples(self) -> List[Tuple[float, float, float]]:
         '''Return points as [(x, y, z)]'''
