@@ -234,6 +234,15 @@ class Controller:
                 r, g, b = props['material']['Kd']
                 color = QColor(255 * r, 255 * g, 255 * b)
 
+            if not self._validate_new_name(name):
+                i = 1
+                new_name = f'{name}({i})'
+                while not self._validate_new_name(new_name):
+                    i += 1
+                    new_name = f'{name}({i})'
+
+                name = new_name
+
             if len(points) == 1:
                 # Is a point
                 point = points[0]

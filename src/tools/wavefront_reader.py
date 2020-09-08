@@ -86,8 +86,8 @@ def read_objfile(fname: str) -> dict:
             if prefix[0] == 'v':
                 verts[prefix].append([float(val)
                                       for val in value.split(' ')])
-            elif prefix == 'f':
-                obj[prefix].append(parse_mixed_delim_str(value))
+            elif prefix == 'f' or prefix == 'l' or prefix == 'p':
+                obj['f'].append(parse_mixed_delim_str(value))
             else:
                 obj[prefix] = value
 
