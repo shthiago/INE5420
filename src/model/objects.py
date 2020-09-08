@@ -51,7 +51,7 @@ class Point3D(BaseNamedColoredObject):
         return ['# Point3D',
                 f'o {self.name}',
                 f'usemtl {self.color.name()[1:]}',
-                f'p {point_index}']
+                f'f {point_index}']
 
     def as_tuple(self):
         '''Return point as (x, y, x)'''
@@ -87,7 +87,7 @@ class Line(BaseNamedColoredObject):
         return ['# Line',
                 f'o {self.name}',
                 f'usemtl {self.color.name()[1:]}',
-                f'l {index_p1} {index_p2}', ]
+                f'f {index_p1} {index_p2}', ]
 
 
 class Wireframe(BaseNamedColoredObject):
