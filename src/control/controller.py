@@ -363,7 +363,7 @@ class Controller:
         """
         if mode not in ['in', 'out']:
             raise ValueError(
-                f'Invalid mode. Expect in or out, receivevd {mode}')
+                f'Invalid mode. Expect in or out, received {mode}')
         try:
             step = int(self.main_window.step_input.text())
         except ValueError:
@@ -376,19 +376,21 @@ class Controller:
             return
 
         # Process step in pct
+        wwidth = (self.window_xmax - self.window_xmin)/2
+        wheight = (self.window_ymax - self.window_ymin)/2
         if mode == 'in':
-            self.window_xmax *= (1 - int(step/2)/100)
-            self.window_xmin *= (1 - int(step/2)/100)
+            self.window_xmax = self.window_xmax - wwidth*(int(step/2)/100)
+            self.window_xmin = self.window_xmin + wwidth*(int(step/2)/100)
 
-            self.window_ymax *= (1 - int(step/2)/100)
-            self.window_ymin *= (1 - int(step/2)/100)
+            self.window_ymax = self.window_ymax - wheight*(int(step/2)/100)
+            self.window_ymin = self.window_ymin + wheight*(int(step/2)/100)
 
         elif mode == 'out':
-            self.window_xmax *= (1 + int(step/2)/100)
-            self.window_xmin *= (1 + int(step/2)/100)
+            self.window_xmax = self.window_xmax + wwidth*(int(step/2)/100)
+            self.window_xmin = self.window_xmin - wwidth*(int(step/2)/100)
 
-            self.window_ymax *= (1 + int(step/2)/100)
-            self.window_ymin *= (1 + int(step/2)/100)
+            self.window_ymax = self.window_ymax + wheight*(int(step/2)/100)
+            self.window_ymin = self.window_ymin - wheight*(int(step/2)/100)
 
         # Update objects on viewport
         self._process_viewport()
@@ -464,7 +466,7 @@ class Controller:
         window_width = self.window_ymax - self.window_ymin
         window_height = self.window_xmax - self.window_xmin
 
-        print(self._vup_angle_degrees)
+        #print(self._vup_angle_degrees)
         normalizer = Normalizer(
             Point3D('_wc',
                     x=window_center_x,
