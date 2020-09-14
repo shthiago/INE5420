@@ -57,10 +57,10 @@ class Controller:
         self.window_ymax = 300
 
         # Viewport values
-        self.xvp_min = 0
-        self.yvp_min = 0
-        self.xvp_max = 600
-        self.yvp_max = 600
+        self.xvp_min = 10 # it was 0, changed for clipping proof
+        self.yvp_min = 10 # it was 0, changed for clipping proof
+        self.xvp_max = 590 # it was 600, changed for clipping proof
+        self.yvp_max = 590 # it was 600, changed for clipping proof
 
         self._process_viewport()
 
@@ -520,6 +520,7 @@ class Controller:
         """
         Function to create the window that will be drew into viewport
         """
+
 
         grid = [Line('gx',
                      Point3D('_gx1', 0, -1000, 0),
