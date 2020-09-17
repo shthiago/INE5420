@@ -213,9 +213,11 @@ class Controller:
 
     def _import_from_file_handler(self):
         '''Get the .obj filepath and call the proper load functions'''
+        
         file = QFileDialog.getOpenFileName()[0]
-        self._import_from_file(file)
-        self._process_viewport()
+        if file != '':
+            self._import_from_file(file)
+            self._process_viewport()
 
     def _import_from_file(self, file: str):
         '''Call wavefront loaders'''
