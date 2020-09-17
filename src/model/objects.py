@@ -57,6 +57,12 @@ class Point3D(BaseNamedColoredObject):
         '''Return point as (x, y, x)'''
         return (self.x, self.y, self.z)
 
+    def __eq__(self, other) -> bool:
+        return self.x == other.x and self.y == other.y
+
+    def __ne__(self, other) -> bool:
+        return not self.__eq__(other)
+
 
 class Line(BaseNamedColoredObject):
     """
@@ -113,6 +119,18 @@ class Wireframe(BaseNamedColoredObject):
                 f'o {self.name}',
                 f'usemtl {self.color.name()[1:]}',
                 f'f {" ".join(indexes)}']
+
+    def lines(self):
+        '''Iterator for getting lines of wireframe'''
+        i = 0
+        size = len(self.points)
+
+        for i in range(size-1):
+            yield Line(name='__',
+                       p1=self.points[i],
+                       p2=self.points[i+1])
+
+        yield Line(name='__', p1=self.points[-1], p2=self.points[0])
 
 
 class ViewportObjectRepresentation(NamedTuple):

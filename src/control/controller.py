@@ -9,14 +9,15 @@ from PyQt5.QtWidgets import (QApplication, QMessageBox,
 from PyQt5.QtGui import QColor
 from loguru import logger
 
-from src.view.main_window import MainWindow
-from src.view.dialog import NewObjectDialog, TransformationDialog
-from src.view.object_item import ObjectItem
+from src.control.transform import Transformator, Normalizer
 from src.model import new_object_factory
 from src.model.objects import Point3D, Line, Wireframe
 from src.model.objects import ViewportObjectRepresentation
-from src.control.transform import Transformator, Normalizer
 from src.tools.wavefront_reader import read_wavefront
+from src.tools.clipper import Clipper, ClipperSetup
+from src.view.main_window import MainWindow
+from src.view.dialog import NewObjectDialog, TransformationDialog
+from src.view.object_item import ObjectItem
 
 
 class Controller:
@@ -57,10 +58,10 @@ class Controller:
         self.window_ymax = 300
 
         # Viewport values
-        self.xvp_min = 10 # it was 0, changed for clipping proof
-        self.yvp_min = 10 # it was 0, changed for clipping proof
-        self.xvp_max = 590 # it was 600, changed for clipping proof
-        self.yvp_max = 590 # it was 600, changed for clipping proof
+        self.xvp_min = 10  # it was 0, changed for clipping proof
+        self.yvp_min = 10  # it was 0, changed for clipping proof
+        self.xvp_max = 590  # it was 600, changed for clipping proof
+        self.yvp_max = 590  # it was 600, changed for clipping proof
 
         self._process_viewport()
 
@@ -409,44 +410,44 @@ class Controller:
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_ymax += offsety*cos(rad_angle)
-            self.window_ymin += offsety*cos(rad_angle)
+            self.window_ymax += offsety * cos(rad_angle)
+            self.window_ymin += offsety * cos(rad_angle)
 
-            self.window_xmax += offsety*sin(rad_angle)
-            self.window_xmin += offsety*sin(rad_angle)
+            self.window_xmax += offsety * sin(rad_angle)
+            self.window_xmin += offsety * sin(rad_angle)
 
         elif mode == 'up':
             rad_angle = radians(180 - self._vup_angle_degrees)
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_ymax -= offsety*cos(rad_angle)
-            self.window_ymin -= offsety*cos(rad_angle)
+            self.window_ymax -= offsety * cos(rad_angle)
+            self.window_ymin -= offsety * cos(rad_angle)
 
-            self.window_xmax -= offsety*sin(rad_angle)
-            self.window_xmin -= offsety*sin(rad_angle)
+            self.window_xmax -= offsety * sin(rad_angle)
+            self.window_xmin -= offsety * sin(rad_angle)
 
         elif mode == 'right':
             rad_angle = radians(self._vup_angle_degrees)
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_xmax += offsetx*cos_vup
-            self.window_xmin += offsetx*cos_vup
+            self.window_xmax += offsetx * cos_vup
+            self.window_xmin += offsetx * cos_vup
 
-            self.window_ymax += offsetx*sen_vup
-            self.window_ymin += offsetx*sen_vup
+            self.window_ymax += offsetx * sen_vup
+            self.window_ymin += offsetx * sen_vup
 
         elif mode == 'left':
             rad_angle = radians(self._vup_angle_degrees)
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_xmax -= offsetx*cos_vup
-            self.window_xmin -= offsetx*cos_vup
+            self.window_xmax -= offsetx * cos_vup
+            self.window_xmin -= offsetx * cos_vup
 
-            self.window_ymax -= offsetx*sen_vup
-            self.window_ymin -= offsetx*sen_vup
+            self.window_ymax -= offsetx * sen_vup
+            self.window_ymin -= offsetx * sen_vup
 
         self._process_viewport()
 
@@ -521,20 +522,26 @@ class Controller:
         Function to create the window that will be drew into viewport
         """
 
-
         grid = [Line('gx',
-                     Point3D('_gx1', 0, -1000, 0),
-                     Point3D('_gx2', 0, 1000, 0),
+                     Point3D('_gx1', 0, -10000, 0),
+                     Point3D('_gx2', 0, 10000, 0),
                      thickness=1),
                 Line('gy',
-                     Point3D('_gy1', -1000, 0, 0),
-                     Point3D('_gy2', 1000, 0, 0),
+                     Point3D('_gy1', -10000, 0, 0),
+                     Point3D('_gy2', 10000, 0, 0),
                      thickness=1)]
 
         normalized_display_file = self.get_normalized_display_file(grid=grid)
 
+        # Create clipper for normalized coordinates  system
+        clipper_setup = ClipperSetup(xmax=1, xmin=-1, ymax=1, ymin=-1)
+        clipper = Clipper(clipper_setup)
+
+        clipped_normalized_display_file = clipper.clip_objects(
+            normalized_display_file)
+
         transformed_groups_of_points: List[ViewportObjectRepresentation] = []
-        for obj in normalized_display_file:
+        for obj in clipped_normalized_display_file:
             if isinstance(obj, Point3D):
                 transformed_groups_of_points.append(
                     ViewportObjectRepresentation(
@@ -607,9 +614,9 @@ class Controller:
         yvpmin = self.yvp_min
 
         xvp = ((point.x - xwmin)/(xwmax - xwmin)) * \
-            (xvpmax - xvpmin) - self.xvp_min
+            (xvpmax - xvpmin) + xvpmin
         yvp = (1 - ((point.y - ywmin)/(ywmax - ywmin))) * \
-            (yvpmax - yvpmin) - self.yvp_min
+            (yvpmax - yvpmin) + yvpmin
 
         return Point3D(name=point.name, x=xvp, y=yvp, z=point.z)
 
