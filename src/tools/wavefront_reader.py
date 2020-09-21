@@ -62,6 +62,7 @@ def read_objfile(fname: str) -> dict:
         lines = file.read().splitlines()
 
     for line in lines:
+
         if not line.strip():
             continue
 
@@ -84,8 +85,7 @@ def read_objfile(fname: str) -> dict:
             obj['o'] = fname
         if obj_props:
             if prefix[0] == 'v':
-                verts[prefix].append([float(val)
-                                      for val in value.split(' ')])
+                verts[prefix].append([float(val) for val in value.split(' ')])
             elif prefix == 'f' or prefix == 'l' or prefix == 'p':
                 obj['f'].append(parse_mixed_delim_str(value))
             else:
@@ -93,12 +93,12 @@ def read_objfile(fname: str) -> dict:
 
     # Reindex vertices to be in face index order, then remove face indices.
     verts = {key: np.array(value) for key, value in verts.items()}
+    print(verts)
     for obj in obj_props:
         if not obj['f']:
             continue
 
-        obj['f'] = tuple(np.array(verts) if verts[0] else tuple()
-                         for verts in zip(*obj['f']))
+        obj['f'] = tuple(np.array(verts) if verts[0] else tuple() for verts in zip(*obj['f']))
         for idx, vertname in enumerate(['v', 'vt', 'vn']):
             if vertname in verts:
                 obj[vertname] = verts[vertname][obj['f'][idx].flatten() - 1, :]
