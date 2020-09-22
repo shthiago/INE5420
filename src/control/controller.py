@@ -11,8 +11,8 @@ from loguru import logger
 
 from src.control.transform import Transformator, Normalizer
 from src.model import new_object_factory
-from src.model.objects import Point3D, Line, Wireframe
-from src.model.objects import ViewportObjectRepresentation
+from src.model.objects import Point3D, Line, Wireframe, BezierCurve
+from src.model.objects import ViewportObjectRepresentation, BezierCurveSetup
 from src.tools.wavefront_reader import read_wavefront
 from src.tools.clipper import Clipper, ClipperSetup
 from src.view.main_window import MainWindow
@@ -62,6 +62,17 @@ class Controller:
         self.yvp_min = 10  # it was 0, changed for clipping proof
         self.xvp_max = 590  # it was 600, changed for clipping proof
         self.yvp_max = 590  # it was 600, changed for clipping proof
+
+        self.add_object_to_list(
+            BezierCurve(name='Curva da galera',
+                        curve_setups=[
+                            BezierCurveSetup(
+                                P1=Point3D('__', x=100, y=100, z=0),
+                                P2=Point3D('__', x=200, y=200, z=0),
+                                P3=Point3D('__', x=300, y=200, z=0),
+                                P4=Point3D('__', x=400, y=100, z=0))
+                        ])
+        )
 
         self._process_viewport()
 
@@ -562,12 +573,12 @@ class Controller:
                                                  color=obj.color,
                                                  thickness=obj.thickness)
                 )
+
         self.main_window.viewport.draw_objects(transformed_groups_of_points)
 
     def get_normalized_display_file(self, grid: List[Line]
                                     ) -> List[Union[Point3D, Line, Wireframe]]:
         '''Take internal Vup vector and rotate grid and internal list of objects'''
-        objects_list = grid + self.display_file
 
         window_center_x = (self.window_xmax + self.window_xmin)/2
         window_center_y = (self.window_ymax + self.window_ymin)/2
@@ -584,6 +595,16 @@ class Controller:
             vup_angle=self._vup_angle_degrees
         )
 
+        objects_list = []
+        curve_step = window_width/100000
+        for obj in self.display_file:
+            if isinstance(obj, BezierCurve):
+                # Switch the curve by its points
+                objects_list.extend(obj.points(curve_step))
+            else:
+                objects_list.append(obj)
+
+        objects_list.extend(grid)
         return normalizer.normalize_objects(objects_list)
 
     def viewpoert_transform_point(self, point: Point3D):

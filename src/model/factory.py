@@ -1,10 +1,13 @@
+from typing import List
+
 from PyQt5.QtWidgets import QWidget
 
-from src.model.objects import Point3D, Line, Wireframe
-from src.view.dialog import LineTab, PointTab
+from src.model.objects import (Point3D, Line, Wireframe,
+                               BezierCurve, BezierCurveSetup)
+from src.view.dialog import LineTab, PointTab, CurveTab, WireframeTab
 
 
-def create_line(name: str, tab: LineTab):
+def create_line(name: str, tab: LineTab) -> Line:
     """
     Create Line object
     """
@@ -22,7 +25,7 @@ def create_line(name: str, tab: LineTab):
     return Line(name, p1, p2)
 
 
-def create_point3D(name: str, tab: PointTab):
+def create_point3D(name: str, tab: PointTab) -> Point3D:
     """
     Create Point3D object
     """
@@ -32,7 +35,7 @@ def create_point3D(name: str, tab: PointTab):
     return Point3D(name, x, y, z)
 
 
-def create_wireframe(name: str, tab: PointTab):
+def create_wireframe(name: str, tab: WireframeTab) -> Wireframe:
     """
     Create Wireframe object
     """
@@ -43,6 +46,28 @@ def create_wireframe(name: str, tab: PointTab):
         points.append(point)
 
     return Wireframe(name, points)
+
+
+def create_curve(name: str, tab: CurveTab) -> BezierCurve:
+    """Create a bezier curve, compsoed by multipe P1 to P4 points"""
+    points_groups = tab.curves_list
+
+    setups: List[BezierCurveSetup] = []
+    for group in points_groups:
+        p1 = group['P1']
+        p2 = group['P2']
+        p3 = group['P3']
+        p4 = group['P4']
+        setup = BezierCurveSetup(
+            P1=Point3D('__', x=p1['x'], y=p1['y'], z=p1['z']),
+            P2=Point3D('__', x=p2['x'], y=p2['y'], z=p2['z']),
+            P3=Point3D('__', x=p3['x'], y=p3['y'], z=p3['z']),
+            P4=Point3D('__', x=p4['x'], y=p4['y'], z=p4['z']),
+        )
+
+        setups.append(setup)
+
+    return BezierCurve(name=name, curve_setups=setups)
 
 
 def new_object_factory(obj_name: str, tab_name: str, tab: QWidget):
@@ -62,6 +87,8 @@ def new_object_factory(obj_name: str, tab_name: str, tab: QWidget):
             return status, create_line(obj_name, tab)
         elif tab_name == 'Wireframe':
             return status, create_wireframe(obj_name, tab)
+        elif tab_name == 'Curve':
+            return status, create_curve(obj_name, tab)
 
         raise ValueError(f'Invalid tab name: {tab_name}')
 

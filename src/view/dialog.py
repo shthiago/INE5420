@@ -41,6 +41,10 @@ class NewObjectDialog(QtWidgets.QDialog):
         self.wireframe_tab = WireframeTab()
         self.tab_panel.addTab(self.wireframe_tab, "Wireframe")
 
+        # Add wireframe mechanism
+        self.curve_tab = CurveTab()
+        self.tab_panel.addTab(self.curve_tab, "Curve")
+
         self.tab_panel.setCurrentIndex(0)
 
     def reset_values(self):
@@ -58,6 +62,9 @@ class NewObjectDialog(QtWidgets.QDialog):
 
         # Reset input for wireframe
         self.wireframe_tab.reset_values()
+
+        # Reset input for curve
+        self.curve_tab.reset_values()
 
     def active_tab(self):
         """
@@ -281,6 +288,226 @@ class WireframeTab(QtWidgets.QWidget):
         self.z_coord_pt_input.clear()
         self.points_model.clear()
         self.points_list.clear()
+
+
+class CurveTab(QtWidgets.QWidget):
+    """
+    Tab for holding buttons and inputs for creating a point
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.curves_list = []
+
+        self.numeric_validator = QtGui.QIntValidator(-1000, 1000)
+
+        self.points_view = QtWidgets.QListView(self)
+        self.points_view.setGeometry(QtCore.QRect(200, 10, 160, 150))
+        self.points_model = QtGui.QStandardItemModel()
+        self.points_view.setModel(self.points_model)
+
+        self.x_lbl_pt = QtWidgets.QLabel(self)
+        self.x_lbl_pt.setGeometry(QtCore.QRect(50, 10, 20, 15))
+        self.x_lbl_pt.setText("X")
+
+        self.y_lbl_pt = QtWidgets.QLabel(self)
+        self.y_lbl_pt.setGeometry(QtCore.QRect(100, 10, 20, 15))
+        self.y_lbl_pt.setText("Y")
+
+        self.z_lbl_pt = QtWidgets.QLabel(self)
+        self.z_lbl_pt.setGeometry(QtCore.QRect(150, 10, 20, 15))
+        self.z_lbl_pt.setText("Z")
+
+        dist_top_to_first_label = 35
+        dist_left_to_label = 10
+        dist_label_to_x_input = 30
+        dist_from_input_to_input = 50
+        dist_vertical_label_to_label = 25
+        self.p1_lbl = QtWidgets.QLabel(self)
+        self.p1_lbl.setText('P1')
+        self.p1_lbl.setGeometry(QtCore.QRect(dist_left_to_label,
+                                             dist_top_to_first_label,
+                                             20, 23))
+        self.x_coord_p1_input = QtWidgets.QLineEdit(self)
+        self.x_coord_p1_input.setGeometry(
+            QtCore.QRect(dist_left_to_label + dist_label_to_x_input,
+                         dist_top_to_first_label,
+                         40, 20))
+        self.x_coord_p1_input.setValidator(self.numeric_validator)
+
+        self.y_coord_p1_input = QtWidgets.QLineEdit(self)
+        self.y_coord_p1_input.setGeometry(
+            QtCore.QRect(dist_left_to_label + dist_label_to_x_input + dist_from_input_to_input,
+                         dist_top_to_first_label,
+                         40, 20))
+        self.y_coord_p1_input.setValidator(self.numeric_validator)
+
+        self.z_coord_p1_input = QtWidgets.QLineEdit(self)
+        self.z_coord_p1_input.setGeometry(
+            QtCore.QRect(dist_left_to_label + dist_label_to_x_input + 2 * dist_from_input_to_input,
+                         dist_top_to_first_label,
+                         40, 20))
+        self.z_coord_p1_input.setValidator(self.numeric_validator)
+
+        self.p2_lbl = QtWidgets.QLabel(self)
+        self.p2_lbl.setText('P2')
+        self.p2_lbl.setGeometry(QtCore.QRect(dist_left_to_label,
+                                             dist_top_to_first_label + dist_vertical_label_to_label,
+                                             20, 23))
+        self.x_coord_p2_input = QtWidgets.QLineEdit(self)
+        self.x_coord_p2_input.setGeometry(
+            QtCore.QRect(dist_left_to_label + dist_label_to_x_input,
+                         dist_top_to_first_label + dist_vertical_label_to_label,
+                         40, 20))
+        self.x_coord_p2_input.setValidator(self.numeric_validator)
+
+        self.y_coord_p2_input = QtWidgets.QLineEdit(self)
+        self.y_coord_p2_input.setGeometry(
+            QtCore.QRect(dist_left_to_label + dist_label_to_x_input + dist_from_input_to_input,
+                         dist_top_to_first_label + dist_vertical_label_to_label,
+                         40, 20))
+        self.y_coord_p2_input.setValidator(self.numeric_validator)
+
+        self.z_coord_p2_input = QtWidgets.QLineEdit(self)
+        self.z_coord_p2_input.setGeometry(
+            QtCore.QRect(dist_left_to_label + dist_label_to_x_input + 2 * dist_from_input_to_input,
+                         dist_top_to_first_label + dist_vertical_label_to_label,
+                         40, 20))
+        self.z_coord_p2_input.setValidator(self.numeric_validator)
+
+        self.p3_lbl = QtWidgets.QLabel(self)
+        self.p3_lbl.setText('P3')
+        self.p3_lbl.setGeometry(QtCore.QRect(dist_left_to_label,
+                                             dist_top_to_first_label + 2 * dist_vertical_label_to_label,
+                                             20, 23))
+        self.x_coord_p3_input = QtWidgets.QLineEdit(self)
+        self.x_coord_p3_input.setGeometry(
+            QtCore.QRect(dist_left_to_label + dist_label_to_x_input,
+                         dist_top_to_first_label + 2 * dist_vertical_label_to_label,
+                         40, 20))
+        self.x_coord_p3_input.setValidator(self.numeric_validator)
+
+        self.y_coord_p3_input = QtWidgets.QLineEdit(self)
+        self.y_coord_p3_input.setGeometry(
+            QtCore.QRect(dist_left_to_label + dist_label_to_x_input + dist_from_input_to_input,
+                         dist_top_to_first_label + 2 * dist_vertical_label_to_label,
+                         40, 20))
+        self.y_coord_p3_input.setValidator(self.numeric_validator)
+
+        self.z_coord_p3_input = QtWidgets.QLineEdit(self)
+        self.z_coord_p3_input.setGeometry(
+            QtCore.QRect(dist_left_to_label + dist_label_to_x_input + 2 * dist_from_input_to_input,
+                         dist_top_to_first_label + 2 * dist_vertical_label_to_label,
+                         40, 20))
+        self.z_coord_p3_input.setValidator(self.numeric_validator)
+
+        self.p4_lbl = QtWidgets.QLabel(self)
+        self.p4_lbl.setText('P4')
+        self.p4_lbl.setGeometry(QtCore.QRect(dist_left_to_label,
+                                             dist_top_to_first_label + 3 * dist_vertical_label_to_label,
+                                             20, 23))
+        self.x_coord_p4_input = QtWidgets.QLineEdit(self)
+        self.x_coord_p4_input.setGeometry(
+            QtCore.QRect(dist_left_to_label + dist_label_to_x_input,
+                         dist_top_to_first_label + 3 * dist_vertical_label_to_label,
+                         40, 20))
+        self.x_coord_p4_input.setValidator(self.numeric_validator)
+
+        self.y_coord_p4_input = QtWidgets.QLineEdit(self)
+        self.y_coord_p4_input.setGeometry(
+            QtCore.QRect(dist_left_to_label + dist_label_to_x_input + dist_from_input_to_input,
+                         dist_top_to_first_label + 3 * dist_vertical_label_to_label,
+                         40, 20))
+        self.y_coord_p4_input.setValidator(self.numeric_validator)
+
+        self.z_coord_p4_input = QtWidgets.QLineEdit(self)
+        self.z_coord_p4_input.setGeometry(
+            QtCore.QRect(dist_left_to_label + dist_label_to_x_input + 2 * dist_from_input_to_input,
+                         dist_top_to_first_label + 3 * dist_vertical_label_to_label,
+                         40, 20))
+        self.z_coord_p4_input.setValidator(self.numeric_validator)
+
+        self.add_point_btn = QtWidgets.QPushButton(self)
+        self.add_point_btn.setGeometry(QtCore.QRect(50, 140, 100, 25))
+        self.add_point_btn.setText('Add curve')
+
+        self.add_point_btn.clicked.connect(self.__add_input_values_to_list)
+
+    def __add_input_values_to_list(self):
+
+        try:
+            p1_x = int(self.x_coord_p1_input.text())
+            p1_y = int(self.y_coord_p1_input.text())
+            p1_z = int(self.z_coord_p1_input.text())
+
+            p2_x = int(self.x_coord_p2_input.text())
+            p2_y = int(self.y_coord_p2_input.text())
+            p2_z = int(self.z_coord_p2_input.text())
+
+            p3_x = int(self.x_coord_p3_input.text())
+            p3_y = int(self.y_coord_p3_input.text())
+            p3_z = int(self.z_coord_p3_input.text())
+
+            p4_x = int(self.x_coord_p4_input.text())
+            p4_y = int(self.y_coord_p4_input.text())
+            p4_z = int(self.z_coord_p4_input.text())
+
+        except ValueError as e:
+            QtWidgets.QMessageBox.information(
+                self,
+                'Error while creating point',
+                str(e),
+                QtWidgets.QMessageBox.Ok
+            )
+            return
+
+        self.curves_list.append({
+            'P1': {'x': p1_x, 'y': p1_y, 'z': p1_z},
+            'P2': {'x': p2_x, 'y': p2_y, 'z': p2_z},
+            'P3': {'x': p3_x, 'y': p3_y, 'z': p3_z},
+            'P4': {'x': p4_x, 'y': p4_y, 'z': p4_z},
+        })
+        items = []
+        items.append(QtGui.QStandardItem(f'P1 ({p1_x}, {p1_y}, {p1_z})'))
+        items.append(QtGui.QStandardItem(f'P2 ({p2_x}, {p2_y}, {p2_z})'))
+        items.append(QtGui.QStandardItem(f'P3 ({p3_x}, {p3_y}, {p3_z})'))
+        items.append(QtGui.QStandardItem(f'P4 ({p4_x}, {p4_y}, {p4_z})'))
+        for item in items:
+            item.setEditable(False)
+            self.points_model.appendRow(item)
+
+        self.x_coord_p1_input.clear()
+        self.y_coord_p1_input.clear()
+        self.z_coord_p1_input.clear()
+        self.x_coord_p2_input.clear()
+        self.y_coord_p2_input.clear()
+        self.z_coord_p2_input.clear()
+        self.x_coord_p3_input.clear()
+        self.y_coord_p3_input.clear()
+        self.z_coord_p3_input.clear()
+        self.x_coord_p4_input.clear()
+        self.y_coord_p4_input.clear()
+        self.z_coord_p4_input.clear()
+
+    def reset_values(self):
+        """
+        Reset inputs to empty value
+        """
+
+        self.x_coord_p1_input.clear()
+        self.y_coord_p1_input.clear()
+        self.z_coord_p1_input.clear()
+        self.x_coord_p2_input.clear()
+        self.y_coord_p2_input.clear()
+        self.z_coord_p2_input.clear()
+        self.x_coord_p3_input.clear()
+        self.y_coord_p3_input.clear()
+        self.z_coord_p3_input.clear()
+        self.x_coord_p4_input.clear()
+        self.y_coord_p4_input.clear()
+        self.z_coord_p4_input.clear()
+        self.points_model.clear()
+        self.curves_list.clear()
 
 
 # Transformation dialog items
