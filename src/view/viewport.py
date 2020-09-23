@@ -2,6 +2,8 @@
 from typing import List
 
 from PyQt5 import QtWidgets, QtGui
+#from PyQt5.QtWidgets import (QColorDialog)
+from PyQt5.QtGui import QColor
 
 from src.model.objects import ViewportObjectRepresentation
 
@@ -74,5 +76,16 @@ class ViewPort(QtWidgets.QLabel):
                 last_p = obj.points[-1]
                 painter.drawLine(last_p.x, last_p.y,
                                  init_p.x, init_p.y)
+        
+
+        # drawing the view port border
+        pen.setWidth(2)
+        pen.setColor(QColor(255,0,0))
+        painter.setPen(pen)
+        
+        painter.drawLine(10,10,590,10)
+        painter.drawLine(10,10,10,590)
+        painter.drawLine(10,590,590,590)
+        painter.drawLine(590,10,590,590)
 
         painter.end()

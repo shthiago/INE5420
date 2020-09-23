@@ -9,14 +9,15 @@ from PyQt5.QtWidgets import (QApplication, QMessageBox,
 from PyQt5.QtGui import QColor
 from loguru import logger
 
+from src.control.transform import Transformator, Normalizer
+from src.model import new_object_factory
+from src.model.objects import Point3D, Line, Wireframe, BezierCurve
+from src.model.objects import ViewportObjectRepresentation, BezierCurveSetup
+from src.tools.wavefront_reader import read_wavefront
+from src.tools.clipper import Clipper, ClipperSetup
 from src.view.main_window import MainWindow
 from src.view.dialog import NewObjectDialog, TransformationDialog
 from src.view.object_item import ObjectItem
-from src.model import new_object_factory
-from src.model.objects import Point3D, Line, Wireframe
-from src.model.objects import ViewportObjectRepresentation
-from src.control.transform import Transformator, Normalizer
-from src.tools.wavefront_reader import read_wavefront
 
 
 class Controller:
@@ -57,10 +58,21 @@ class Controller:
         self.window_ymax = 300
 
         # Viewport values
-        self.xvp_min = 0
-        self.yvp_min = 0
-        self.xvp_max = 600
-        self.yvp_max = 600
+        self.xvp_min = 10  # it was 0, changed for clipping proof
+        self.yvp_min = 10  # it was 0, changed for clipping proof
+        self.xvp_max = 590  # it was 600, changed for clipping proof
+        self.yvp_max = 590  # it was 600, changed for clipping proof
+
+        self.add_object_to_list(
+            BezierCurve(name='Curva da galera',
+                        curve_setups=[
+                            BezierCurveSetup(
+                                P1=Point3D('__', x=100, y=100, z=0),
+                                P2=Point3D('__', x=200, y=200, z=0),
+                                P3=Point3D('__', x=300, y=200, z=0),
+                                P4=Point3D('__', x=400, y=100, z=0))
+                        ])
+        )
 
         self._process_viewport()
 
@@ -411,44 +423,44 @@ class Controller:
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_ymax += offsety*cos(rad_angle)
-            self.window_ymin += offsety*cos(rad_angle)
+            self.window_ymax += offsety * cos(rad_angle)
+            self.window_ymin += offsety * cos(rad_angle)
 
-            self.window_xmax += offsety*sin(rad_angle)
-            self.window_xmin += offsety*sin(rad_angle)
+            self.window_xmax += offsety * sin(rad_angle)
+            self.window_xmin += offsety * sin(rad_angle)
 
         elif mode == 'up':
             rad_angle = radians(180 - self._vup_angle_degrees)
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_ymax -= offsety*cos(rad_angle)
-            self.window_ymin -= offsety*cos(rad_angle)
+            self.window_ymax -= offsety * cos(rad_angle)
+            self.window_ymin -= offsety * cos(rad_angle)
 
-            self.window_xmax -= offsety*sin(rad_angle)
-            self.window_xmin -= offsety*sin(rad_angle)
+            self.window_xmax -= offsety * sin(rad_angle)
+            self.window_xmin -= offsety * sin(rad_angle)
 
         elif mode == 'right':
             rad_angle = radians(self._vup_angle_degrees)
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_xmax += offsetx*cos_vup
-            self.window_xmin += offsetx*cos_vup
+            self.window_xmax += offsetx * cos_vup
+            self.window_xmin += offsetx * cos_vup
 
-            self.window_ymax += offsetx*sen_vup
-            self.window_ymin += offsetx*sen_vup
+            self.window_ymax += offsetx * sen_vup
+            self.window_ymin += offsetx * sen_vup
 
         elif mode == 'left':
             rad_angle = radians(self._vup_angle_degrees)
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_xmax -= offsetx*cos_vup
-            self.window_xmin -= offsetx*cos_vup
+            self.window_xmax -= offsetx * cos_vup
+            self.window_xmin -= offsetx * cos_vup
 
-            self.window_ymax -= offsetx*sen_vup
-            self.window_ymin -= offsetx*sen_vup
+            self.window_ymax -= offsetx * sen_vup
+            self.window_ymin -= offsetx * sen_vup
 
         self._process_viewport()
 
@@ -524,18 +536,25 @@ class Controller:
         """
 
         grid = [Line('gx',
-                     Point3D('_gx1', 0, -1000, 0),
-                     Point3D('_gx2', 0, 1000, 0),
+                     Point3D('_gx1', 0, -10000, 0),
+                     Point3D('_gx2', 0, 10000, 0),
                      thickness=1),
                 Line('gy',
-                     Point3D('_gy1', -1000, 0, 0),
-                     Point3D('_gy2', 1000, 0, 0),
+                     Point3D('_gy1', -10000, 0, 0),
+                     Point3D('_gy2', 10000, 0, 0),
                      thickness=1)]
 
         normalized_display_file = self.get_normalized_display_file(grid=grid)
 
+        # Create clipper for normalized coordinates  system
+        clipper_setup = ClipperSetup(xmax=1, xmin=-1, ymax=1, ymin=-1)
+        clipper = Clipper(clipper_setup)
+
+        clipped_normalized_display_file = clipper.clip_objects(
+            normalized_display_file)
+
         transformed_groups_of_points: List[ViewportObjectRepresentation] = []
-        for obj in normalized_display_file:
+        for obj in clipped_normalized_display_file:
             if isinstance(obj, Point3D):
                 transformed_groups_of_points.append(
                     ViewportObjectRepresentation(
@@ -556,12 +575,12 @@ class Controller:
                                                  color=obj.color,
                                                  thickness=obj.thickness)
                 )
+
         self.main_window.viewport.draw_objects(transformed_groups_of_points)
 
     def get_normalized_display_file(self, grid: List[Line]
                                     ) -> List[Union[Point3D, Line, Wireframe]]:
         '''Take internal Vup vector and rotate grid and internal list of objects'''
-        objects_list = grid + self.display_file
 
         window_center_x = (self.window_xmax + self.window_xmin)/2
         window_center_y = (self.window_ymax + self.window_ymin)/2
@@ -578,6 +597,16 @@ class Controller:
             vup_angle=self._vup_angle_degrees
         )
 
+        objects_list = []
+        curve_step = window_width/100000
+        for obj in self.display_file:
+            if isinstance(obj, BezierCurve):
+                # Switch the curve by its points
+                objects_list.extend(obj.points(curve_step))
+            else:
+                objects_list.append(obj)
+
+        objects_list.extend(grid)
         return normalizer.normalize_objects(objects_list)
 
     def viewpoert_transform_point(self, point: Point3D):
@@ -608,9 +637,9 @@ class Controller:
         yvpmin = self.yvp_min
 
         xvp = ((point.x - xwmin)/(xwmax - xwmin)) * \
-            (xvpmax - xvpmin) - self.xvp_min
+            (xvpmax - xvpmin) + xvpmin
         yvp = (1 - ((point.y - ywmin)/(ywmax - ywmin))) * \
-            (yvpmax - yvpmin) - self.yvp_min
+            (yvpmax - yvpmin) + yvpmin
 
         return Point3D(name=point.name, x=xvp, y=yvp, z=point.z)
 

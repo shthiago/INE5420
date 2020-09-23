@@ -5,7 +5,7 @@ from statistics import mean
 from copy import deepcopy
 
 import numpy as np
-from src.model.objects import Point3D, Line, Wireframe
+from src.model.objects import Point3D, Line, Wireframe, BezierCurve, BezierCurveSetup
 
 
 def transform(points: List[Point3D], matrix: np.ndarray) -> List[Point3D]:
@@ -116,14 +116,19 @@ def scale_points_by_point(points: List[Point3D], scale_x: float,
 class Transformator:
     '''Apply transform operations over objects'''
 
-    def __init__(self, obj: Union[Point3D, Line, Wireframe]):
+    def __init__(self, obj: Union[Point3D, Line, Wireframe, BezierCurve]):
         '''Initialize with a intern target object'''
-        self._object: Union[Point3D, Line, Wireframe] = obj
+        self._object: Union[Point3D, Line, Wireframe, BezierCurve] = obj
 
     def get_object_geometric_center(self) -> Point3D:
         '''Get geometrix center of intern object'''
         if isinstance(self._object, Point3D):
             points = [self._object]
+
+        elif isinstance(self._object, BezierCurve):
+            points = []
+            for setup in self._object.curves:
+                points.extend([setup.P1, setup.P2, setup.P3, setup.P4])
 
         else:
             points = self._object.points
@@ -138,7 +143,8 @@ class Transformator:
     def rotate_by_degrees_geometric_center(self, angle: float
                                            ) -> Union[Point3D,
                                                       Line,
-                                                      Wireframe]:
+                                                      Wireframe,
+                                                      BezierCurve]:
         '''Rotate over center intern object in by angle an input angle
 
            Parameters
@@ -153,6 +159,9 @@ class Transformator:
 
         if isinstance(self._object, Line):
             return self._rotate_internal_line_over_center(angle)
+
+        if isinstance(self._object, BezierCurve):
+            return self._rotate_internal_curve_over_center(angle)
 
         return self._rotate_internal_wireframe_over_center(angle)
 
@@ -180,6 +189,29 @@ class Transformator:
 
         return line
 
+    def _rotate_internal_curve_over_center(self, angle: float) -> BezierCurve:
+        '''Rotate a bezier curve over the center os the points from setups'''
+
+        center = self.get_object_geometric_center()
+
+        new_setups = []
+        for setup in self._object.curves:
+            points = [setup.P1, setup.P2, setup.P3, setup.P4]
+            new_points = rotate_points_over_point_by_degrees(
+                points, center, angle)
+            new_setups.append(BezierCurveSetup(
+                P1=new_points[0],
+                P2=new_points[1],
+                P3=new_points[2],
+                P4=new_points[3]
+            ))
+
+        new_curve = deepcopy(self._object)
+
+        new_curve.curves = new_setups
+
+        return new_curve
+
     def _rotate_internal_wireframe_over_center(self, angle: float) -> Wireframe:
         '''Rotate over centerwhen internal is a Wireframe and
             return copy of object'''
@@ -203,7 +235,8 @@ class Transformator:
 
         return wireframe
 
-    def rotate_by_degrees_origin(self, angle: float) -> Union[Point3D, Line, Wireframe]:
+    def rotate_by_degrees_origin(self, angle: float
+                                 ) -> Union[Point3D, Line, Wireframe, BezierCurve]:
         '''Rotate intern object in by angle an input angle
 
            Parameters
@@ -219,7 +252,30 @@ class Transformator:
         if isinstance(self._object, Line):
             return self._rotate_internal_line_over_origin(angle)
 
+        if isinstance(self._object, BezierCurve):
+            return self._rotate_internal_curve_over_origin(angle)
+
         return self._rotate_internal_wireframe_over_origin(angle)
+
+    def _rotate_internal_curve_over_origin(self, angle: float) -> BezierCurve:
+        '''Rotate when internal is a curve and return copy of object'''
+        new_setups = []
+        for setup in self._object.curves:
+            points = [setup.P1, setup.P2, setup.P3, setup.P4]
+            new_points = rotate_points_over_origin_by_degrees(
+                points, angle)
+            new_setups.append(BezierCurveSetup(
+                P1=new_points[0],
+                P2=new_points[1],
+                P3=new_points[2],
+                P4=new_points[3]
+            ))
+
+        new_curve = deepcopy(self._object)
+
+        new_curve.curves = new_setups
+
+        return new_curve
 
     def _rotate_internal_line_over_origin(self, angle: float) -> Line:
         '''Rotate when internal is a Line and return copy of object'''
@@ -274,7 +330,7 @@ class Transformator:
         return rotated
 
     def rotate_by_degrees_point(self, angle: float, point: Point3D
-                                ) -> Union[Point3D, Line, Wireframe]:
+                                ) -> Union[Point3D, Line, Wireframe, BezierCurve]:
         '''Rotate intern object in by an input angle over point
 
            Parameters
@@ -292,7 +348,31 @@ class Transformator:
         if isinstance(self._object, Line):
             return self._rotate_internal_line_over_point(angle, point)
 
+        if isinstance(self._object, BezierCurve):
+            return self._rotate_internal_curve_over_point(angle, point)
+
         return self._rotate_internal_wireframe_over_point(angle, point)
+
+    def _rotate_internal_curve_over_point(self, angle: float,
+                                          point: Point3D) -> Line:
+        '''Rotate when internal is a Line and return copy of object'''
+        new_setups = []
+        for setup in self._object.curves:
+            points = [setup.P1, setup.P2, setup.P3, setup.P4]
+            new_points = rotate_points_over_point_by_degrees(
+                points, point, angle)
+            new_setups.append(BezierCurveSetup(
+                P1=new_points[0],
+                P2=new_points[1],
+                P3=new_points[2],
+                P4=new_points[3]
+            ))
+
+        new_curve = deepcopy(self._object)
+
+        new_curve.curves = new_setups
+
+        return new_curve
 
     def _rotate_internal_line_over_point(self, angle: float,
                                          point: Point3D) -> Line:
@@ -353,13 +433,16 @@ class Transformator:
         return rotated
 
     def translate_by_vector(self, desloc_x: float, desloc_y: float
-                            ) -> Union[Point3D, Line, Wireframe]:
+                            ) -> Union[Point3D, Line, Wireframe, BezierCurve]:
         '''Translate internal object by deslocation values'''
         if isinstance(self._object, Point3D):
             return self._translate_point_by_vector(desloc_x, desloc_y)
 
         if isinstance(self._object, Line):
             return self._translate_line_by_vector(desloc_x, desloc_y)
+
+        if isinstance(self._object, BezierCurve):
+            return self._translate_curve_by_vector(desloc_x, desloc_y)
 
         return self._translate_wireframe(desloc_x, desloc_y)
 
@@ -385,6 +468,26 @@ class Transformator:
         translated.color = self._object.color
 
         return translated
+
+    def _translate_curve_by_vector(self, desloc_x: float, desloc_y: float) -> Line:
+        '''Translate internal object when is a curve and return copy'''
+        new_setups = []
+        for setup in self._object.curves:
+            points = [setup.P1, setup.P2, setup.P3, setup.P4]
+            new_points = translate_points(
+                points, desloc_x, desloc_y)
+            new_setups.append(BezierCurveSetup(
+                P1=new_points[0],
+                P2=new_points[1],
+                P3=new_points[2],
+                P4=new_points[3]
+            ))
+
+        new_curve = deepcopy(self._object)
+
+        new_curve.curves = new_setups
+
+        return new_curve
 
     def _translate_line_by_vector(self, desloc_x: float, desloc_y: float) -> Line:
         '''Translate internal object when is a line and return copy'''
@@ -429,7 +532,7 @@ class Transformator:
         return wireframe
 
     def scale(self, scale_x: float, scale_y: float
-              ) -> Union[Point3D, Line, Wireframe]:
+              ) -> Union[Point3D, Line, Wireframe, BezierCurve]:
         '''Scale internal object by deslocation values'''
         if isinstance(self._object, Point3D):
             # A scaled point is itself
@@ -437,6 +540,9 @@ class Transformator:
 
         if isinstance(self._object, Line):
             return self._scale_line(scale_x, scale_y)
+
+        if isinstance(self._object, BezierCurve):
+            return self._scale_curve(scale_x, scale_y)
 
         return self._scale_wireframe(scale_x, scale_y)
 
@@ -461,6 +567,29 @@ class Transformator:
         line.p2 = new_points[1]
         return line
 
+    def _scale_curve(self, scale_x: float, scale_y: float) -> BezierCurve:
+        '''Scale internal when is a wireframe and return copy'''
+        new_setups = []
+        for setup in self._object.curves:
+            points = [setup.P1, setup.P2, setup.P3, setup.P4]
+            new_points = scale_points_by_point(
+                points=points,
+                point=self.get_object_geometric_center(),
+                scale_x=scale_x,
+                scale_y=scale_y)
+            new_setups.append(BezierCurveSetup(
+                P1=new_points[0],
+                P2=new_points[1],
+                P3=new_points[2],
+                P4=new_points[3]
+            ))
+
+        new_curve = deepcopy(self._object)
+
+        new_curve.curves = new_setups
+
+        return new_curve
+
     def _scale_wireframe(self, scale_x: float, scale_y: float) -> Wireframe:
         '''Scale internal when is a wireframe and return copy'''
         if isinstance(self._object, Point3D):
@@ -481,7 +610,7 @@ class Transformator:
         wireframe.points = new_points
         return wireframe
 
-    def _intern_copy(self) -> Union[Point3D, Line, Wireframe]:
+    def _intern_copy(self) -> Union[Point3D, Line, Wireframe, BezierCurve]:
         '''Return deepcopy of internal object'''
         return deepcopy(self._object)
 
