@@ -151,24 +151,17 @@ class BezierCurve(BaseNamedColoredObject):
         self.curves = curve_setups
         self.thickness = thickness
 
-    def points(self, step: float):
-        '''Calculate curve points
-
-        Parameters
-        ----------
-        step: float
-            step for t calculation, must be in 0 < step < 1
-        '''
-        points_to_return = []
+    def calculate_lines(self, alpha: float):
+        '''Create a line with function at every alpha step'''
+        lines_to_return = []
         for curve_setup in self.curves:
-            points_to_return.extend(
-                self._calculate_points(curve_setup, step))
+            lines_to_return.extend(
+                self._calculate_for_setup(curve_setup, alpha))
 
-        return points_to_return
+        return lines_to_return
 
-    def _calculate_points(self, setup: BezierCurveSetup, step: float
-                          ) -> List[Point3D]:
-        '''Calcualte points for setup and step'''
+    def _calculate_for_setup(self, setup: BezierCurveSetup, step: float) -> List[Line]:
+        '''Calculate lines for this part os line segment'''
         MB = np.array([[-1,  3, -3,  1],
                        [3, -6,  3,  0],
                        [-3,  3,  0,  0],
@@ -178,16 +171,30 @@ class BezierCurve(BaseNamedColoredObject):
                        [setup.P3.x, setup.P3.y],
                        [setup.P4.x, setup.P4.y]])
 
-        points: List[Point3D] = []
-        for t in list(np.arange(0, 1, step)) + [1]:
-            T = self._t_vec(t)
-            x, y = T.dot(MB).dot(GB)
-            point = Point3D('__p', x=x, y=y, z=0,
-                            thickness=self.thickness)
-            point.color = self.color
-            points.append(point)
+        lines: List[Line] = []
+        t_values = list(np.arange(0, 1, step)) + [1]
+        p_start = t_values[0]
+        T0 = self._t_vec(p_start)
+        for i, p_end in enumerate(t_values, 1):
+            T1 = self._t_vec(p_end)
 
-        return points
+            start_x, start_y = T0.dot(MB).dot(GB)
+            end_x, end_y = T1.dot(MB).dot(GB)
+
+            line = Line(
+                name='__l',
+                p1=Point3D('__p', x=start_x, y=start_y, z=0),
+                p2=Point3D('__p', x=end_x, y=end_y, z=0),
+                thickness=self.thickness
+            )
+            line.color = self.color
+
+            lines.append(line)
+
+            T0 = T1
+            p_start = p_end
+
+        return lines
 
     def as_list_of_tuples(self):
         '''Return points from curve as list of tuples'''

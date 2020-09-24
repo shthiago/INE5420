@@ -596,11 +596,11 @@ class Controller:
         )
 
         objects_list = []
-        curve_step = window_width/100000
+        curve_step = 0.1
         for obj in self.display_file:
             if isinstance(obj, BezierCurve):
                 # Switch the curve by its points
-                objects_list.extend(obj.points(curve_step))
+                objects_list.extend(obj.calculate_lines(curve_step))
             else:
                 objects_list.append(obj)
 
