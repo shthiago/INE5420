@@ -11,7 +11,7 @@ from loguru import logger
 
 from src.control.transform import Transformator, Normalizer
 from src.model import new_object_factory
-from src.model.objects import Point3D, Line, Wireframe, BezierCurve
+from src.model.objects import Point3D, Line, Wireframe, BezierCurve, BSplineCurve
 from src.model.objects import ViewportObjectRepresentation, BezierCurveSetup
 from src.tools.wavefront_reader import read_wavefront
 from src.tools.clipper import Clipper, ClipperSetup
@@ -64,14 +64,25 @@ class Controller:
         self.yvp_max = 590  # it was 600, changed for clipping proof
 
         self.add_object_to_list(
-            BezierCurve(name='Curva da galera',
-                        curve_setups=[
-                            BezierCurveSetup(
-                                P1=Point3D('__', x=100, y=100, z=0),
-                                P2=Point3D('__', x=200, y=200, z=0),
-                                P3=Point3D('__', x=300, y=200, z=0),
-                                P4=Point3D('__', x=400, y=100, z=0))
-                        ])
+            Wireframe('Quadradinho',
+                      points=[
+                          Point3D('__', x=0, y=0, z=0),
+                          Point3D('__', x=100, y=0, z=0),
+                          Point3D('__', x=100, y=100, z=0),
+                          Point3D('__', x=0, y=100, z=0),
+                      ])
+        )
+
+        self.add_object_to_list(
+            BSplineCurve('Spline',
+                         points=[
+                             Point3D('_', x=0, y=0, z=0),
+                             Point3D('_', x=-100, y=200, z=0),
+                             Point3D('_', x=-200, y=0, z=0),
+                             Point3D('_', x=-300, y=-200, z=0),
+                             Point3D('_', x=-400, y=0, z=0),
+                             Point3D('_', x=-500, y=500, z=0),
+                         ])
         )
 
         self._process_viewport()
@@ -598,11 +609,11 @@ class Controller:
         )
 
         objects_list = []
-        curve_step = window_width/100000
+        curve_step = 0.1
         for obj in self.display_file:
-            if isinstance(obj, BezierCurve):
+            if isinstance(obj, BezierCurve) or isinstance(obj, BSplineCurve):
                 # Switch the curve by its points
-                objects_list.extend(obj.points(curve_step))
+                objects_list.extend(obj.calculate_lines(curve_step))
             else:
                 objects_list.append(obj)
 

@@ -206,25 +206,59 @@ class WeilerAthertonPolygonClipping:
 
         if point.x == self.setup.xmax:
             # Right edge
-            br_index = edges.index((self.bot_right, _Type.ORIGINAL))
-            edges.insert(br_index, (point, p_type))
+            index = edges.index((self.bot_right, _Type.ORIGINAL))
 
         elif point.x == self.setup.xmin:
             # Left edge
-            tl_index = edges.index((self.top_left, _Type.ORIGINAL))
-            edges.insert(tl_index, (point, p_type))
+            index = edges.index((self.top_left, _Type.ORIGINAL))
 
         elif point.y == self.setup.ymin:
             # Bottom edge
-            bl_index = edges.index((self.bot_left, _Type.ORIGINAL))
-            edges.insert(bl_index, (point, p_type))
+            index = edges.index((self.bot_left, _Type.ORIGINAL))
 
         elif point.y == self.setup.ymax:
             # Top edge
-            tr_index = edges.index((self.top_right, _Type.ORIGINAL))
-            edges.insert(tr_index, (point, p_type))
+            index = edges.index((self.top_right, _Type.ORIGINAL))
+
+        edges.insert(index, (point, p_type))
 
         return edges
+
+    def order_edges(self, edges: List) -> List:
+        '''Take the list of edges and return it ordering the points between
+        each edge, using the extreme of edge to order'''
+        # Left border
+        slice_0 = edges[
+            0:
+            edges.index((self.top_left, _Type.ORIGINAL))+1
+        ]
+        if len(slice_0) > 1:
+            slice_0.sort(key=lambda k: k[0].y)
+
+        # Top border
+        slice_1 = edges[
+            edges.index((self.top_left, _Type.ORIGINAL))+1:
+            edges.index((self.top_right, _Type.ORIGINAL))+1
+        ]
+        if len(slice_1) > 1:
+            slice_1.sort(key=lambda k: k[0].x)
+
+        # Right border
+        slice_2 = edges[
+            edges.index((self.top_right, _Type.ORIGINAL))+1:
+            edges.index((self.bot_right, _Type.ORIGINAL))+1
+        ]
+        if len(slice_2) > 1:
+            slice_2.sort(key=lambda k: k[0].y, reverse=True)
+
+        # Bottom border
+        slice_3 = edges[
+            edges.index((self.bot_right, _Type.ORIGINAL))+1:
+        ]
+        if len(slice_3) > 1:
+            slice_3.sort(key=lambda k: k[0].x, reverse=True)
+
+        return slice_0 + slice_1 + slice_2 + slice_3
 
     def get_clipped(self) -> Optional[List[Wireframe]]:
         '''Apply the clipping algorithm'''
@@ -254,6 +288,8 @@ class WeilerAthertonPolygonClipping:
                     edges = self.insert_into_edges(edges, clipped.p1,
                                                    _Type.ENTERING)
         out = []
+
+        edges = self.order_edges(edges)
 
         for point, t in entries:
             new_polygon_points = [point]
