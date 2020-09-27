@@ -5,7 +5,7 @@ class NewObjectDialog(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
 
-        self.numeric_validator = QtGui.QIntValidator(-1000, 1000)
+        self.numeric_validator = QtGui.QIntValidator(-10000, 10000)
 
         self.initUi()
 
@@ -93,7 +93,7 @@ class LineTab(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
 
-        self.numeric_validator = QtGui.QIntValidator(-1000, 1000)
+        self.numeric_validator = QtGui.QIntValidator(-10000, 10000)
 
         self.start_lbl = QtWidgets.QLabel(self)
         self.start_lbl.setGeometry(QtCore.QRect(10, 10, 191, 16))
@@ -174,7 +174,7 @@ class PointTab(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
 
-        self.numeric_validator = QtGui.QIntValidator(-1000, 1000)
+        self.numeric_validator = QtGui.QIntValidator(-10000, 10000)
 
         self.z_lbl_pt = QtWidgets.QLabel(self)
         self.z_lbl_pt.setGeometry(QtCore.QRect(160, 30, 21, 16))
@@ -223,7 +223,7 @@ class WireframeTab(QtWidgets.QWidget):
         super().__init__()
         self.points_list = []
 
-        self.numeric_validator = QtGui.QIntValidator(-1000, 1000)
+        self.numeric_validator = QtGui.QIntValidator(-10000, 10000)
 
         self.points_view = QtWidgets.QListView(self)
         self.points_view.setGeometry(QtCore.QRect(160, 10, 200, 150))
@@ -306,7 +306,7 @@ class CurveTab(QtWidgets.QWidget):
         super().__init__()
         self.curves_list = []
 
-        self.numeric_validator = QtGui.QIntValidator(-1000, 1000)
+        self.numeric_validator = QtGui.QIntValidator(-10000, 10000)
 
         self.points_view = QtWidgets.QListView(self)
         self.points_view.setGeometry(QtCore.QRect(200, 10, 160, 150))
@@ -523,7 +523,7 @@ class BSplineTab(QtWidgets.QDialog):
 
         self.points_list = []
 
-        self.numeric_validator = QtGui.QIntValidator(-1000, 1000)
+        self.numeric_validator = QtGui.QIntValidator(-10000, 10000)
 
         self.points_view = QtWidgets.QListView(self)
         self.points_view.setGeometry(QtCore.QRect(160, 10, 200, 150))
@@ -576,7 +576,6 @@ class BSplineTab(QtWidgets.QDialog):
             )
             return
 
-        self.reset_values
         self.points_list.append((x, y, z))
         item = QtGui.QStandardItem(f'({x}, {y}, {z})')
         item.setEditable(False)
@@ -606,7 +605,7 @@ class TransformationDialog(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
 
-        self.numeric_validator = QtGui.QIntValidator(-1000, 1000)
+        self.numeric_validator = QtGui.QIntValidator(-10000, 10000)
 
         self.initUi()
 
@@ -674,7 +673,7 @@ class MoveTab(QtWidgets.QWidget):
         super().__init__()
         self.points_list = []
 
-        self.numeric_validator = QtGui.QIntValidator(0, 10000)
+        self.numeric_validator = QtGui.QIntValidator(-10000, 10000)
 
         # Label to indicate current operation
         self.option_label = QtWidgets.QLabel(self)
@@ -736,7 +735,7 @@ class RotateTab(QtWidgets.QWidget):
         super().__init__()
         self.points_list = []
 
-        self.numeric_validator = QtGui.QIntValidator(0, 10000)
+        self.numeric_validator = QtGui.QIntValidator(-10000, 10000)
         self.degree_validator = QtGui.QIntValidator(-360, 360)
 
         self.ref_lbl = QtWidgets.QLabel('Rotation reference:', self)

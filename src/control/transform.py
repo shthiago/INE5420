@@ -5,7 +5,7 @@ from statistics import mean
 from copy import deepcopy
 
 import numpy as np
-from src.model.objects import Point3D, Line, Wireframe, BezierCurve, BezierCurveSetup
+from src.model.objects import Point3D, Line, Wireframe, BezierCurve, BezierCurveSetup, BSplineCurve
 
 
 def transform(points: List[Point3D], matrix: np.ndarray) -> List[Point3D]:
@@ -130,7 +130,7 @@ class Transformator:
             for setup in self._object.curves:
                 points.extend([setup.P1, setup.P2, setup.P3, setup.P4])
 
-        else:
+        else:  # Wireframe and BSpline
             points = self._object.points
 
         return Point3D(
@@ -161,7 +161,10 @@ class Transformator:
             return self._rotate_internal_line_over_center(angle)
 
         if isinstance(self._object, BezierCurve):
-            return self._rotate_internal_curve_over_center(angle)
+            return self._rotate_internal_bezier_curve_over_center(angle)
+
+        elif isinstance(self._object, BSplineCurve):
+            return self._rotate_internal_bspline_curve_over_center(angle)
 
         return self._rotate_internal_wireframe_over_center(angle)
 
@@ -189,7 +192,7 @@ class Transformator:
 
         return line
 
-    def _rotate_internal_curve_over_center(self, angle: float) -> BezierCurve:
+    def _rotate_internal_bezier_curve_over_center(self, angle: float) -> BezierCurve:
         '''Rotate a bezier curve over the center os the points from setups'''
 
         center = self.get_object_geometric_center()
@@ -211,6 +214,25 @@ class Transformator:
         new_curve.curves = new_setups
 
         return new_curve
+
+    def _rotate_internal_bspline_curve_over_center(self, angle: float) -> BSplineCurve:
+        '''Rotate intrnal BSpline and return copy of object'''
+        if isinstance(self._object, Point3D):
+            error = 'Trying to operate as line/wireframe over point'
+            raise TypeError(error)
+
+        center = self.get_object_geometric_center()
+
+        new_points = rotate_points_over_point_by_degrees(
+            points=self._object.points,
+            point=center,
+            angle=angle
+        )
+
+        new_spline = self._intern_copy()
+        new_spline.points = new_points
+
+        return new_spline
 
     def _rotate_internal_wireframe_over_center(self, angle: float) -> Wireframe:
         '''Rotate over centerwhen internal is a Wireframe and
@@ -253,11 +275,14 @@ class Transformator:
             return self._rotate_internal_line_over_origin(angle)
 
         if isinstance(self._object, BezierCurve):
-            return self._rotate_internal_curve_over_origin(angle)
+            return self._rotate_internal_bezier_curve_over_origin(angle)
+
+        if isinstance(self._object, BSplineCurve):
+            return self._rotate_internal_bspline_curve_over_origin(angle)
 
         return self._rotate_internal_wireframe_over_origin(angle)
 
-    def _rotate_internal_curve_over_origin(self, angle: float) -> BezierCurve:
+    def _rotate_internal_bezier_curve_over_origin(self, angle: float) -> BezierCurve:
         '''Rotate when internal is a curve and return copy of object'''
         new_setups = []
         for setup in self._object.curves:
@@ -296,6 +321,22 @@ class Transformator:
         line.color = self._object.color
 
         return line
+
+    def _rotate_internal_bspline_curve_over_origin(self, angle: float) -> BSplineCurve:
+        '''Rotate when internal is a Wireframe and return copy of object'''
+        if isinstance(self._object, Point3D):
+            error = 'Trying to operate as line/wireframe over point'
+            raise TypeError(error)
+
+        new_points = rotate_points_over_origin_by_degrees(
+            points=self._object.points,
+            angle=angle
+        )
+
+        new_spline = self._intern_copy()
+        new_spline.points = new_points
+
+        return new_spline
 
     def _rotate_internal_wireframe_over_origin(self, angle: float) -> Wireframe:
         '''Rotate when internal is a Wireframe and return copy of object'''
@@ -349,12 +390,15 @@ class Transformator:
             return self._rotate_internal_line_over_point(angle, point)
 
         if isinstance(self._object, BezierCurve):
-            return self._rotate_internal_curve_over_point(angle, point)
+            return self._rotate_internal_bezier_curve_over_point(angle, point)
+
+        if isinstance(self._object, BSplineCurve):
+            return self._rotate_internal_bspline_curve_over_point(angle, point)
 
         return self._rotate_internal_wireframe_over_point(angle, point)
 
-    def _rotate_internal_curve_over_point(self, angle: float,
-                                          point: Point3D) -> Line:
+    def _rotate_internal_bezier_curve_over_point(self, angle: float,
+                                                 point: Point3D) -> Line:
         '''Rotate when internal is a Line and return copy of object'''
         new_setups = []
         for setup in self._object.curves:
@@ -417,6 +461,24 @@ class Transformator:
 
         return wireframe
 
+    def _rotate_internal_bspline_curve_over_point(self, angle: float,
+                                                  point: Point3D) -> BSplineCurve:
+        '''Rotate when internal is a Wireframe and return copy of object'''
+        if isinstance(self._object, Point3D):
+            error = 'Trying to operate as line/wireframe over point'
+            raise TypeError(error)
+
+        new_points = rotate_points_over_point_by_degrees(
+            points=self._object.points,
+            point=point,
+            angle=angle
+        )
+
+        new_spline = self._intern_copy()
+        new_spline.points = new_points
+
+        return new_spline
+
     def _rotate_internal_point_over_point(self, angle: float,
                                           point: Point3D) -> Point3D:
         '''Rotate when internal is a point and return copy of object'''
@@ -442,7 +504,10 @@ class Transformator:
             return self._translate_line_by_vector(desloc_x, desloc_y)
 
         if isinstance(self._object, BezierCurve):
-            return self._translate_curve_by_vector(desloc_x, desloc_y)
+            return self._translate_bezier_curve_by_vector(desloc_x, desloc_y)
+
+        if isinstance(self._object, BSplineCurve):
+            return self._translate_spline_curve_by_vector(desloc_x, desloc_y)
 
         return self._translate_wireframe(desloc_x, desloc_y)
 
@@ -469,7 +534,7 @@ class Transformator:
 
         return translated
 
-    def _translate_curve_by_vector(self, desloc_x: float, desloc_y: float) -> Line:
+    def _translate_bezier_curve_by_vector(self, desloc_x: float, desloc_y: float) -> Line:
         '''Translate internal object when is a curve and return copy'''
         new_setups = []
         for setup in self._object.curves:
@@ -510,6 +575,24 @@ class Transformator:
 
         return line
 
+    def _translate_spline_curve_by_vector(self, desloc_x: float, desloc_y: float
+                                          ) -> BSplineCurve:
+        '''Translate internal object when is a wireframe and return copy'''
+        if isinstance(self._object, Point3D):
+            error = 'Trying to operate as line/wireframe over point'
+            raise TypeError(error)
+
+        new_points = translate_points(
+            points=self._object.points,
+            desloc_x=desloc_x,
+            desloc_y=desloc_y
+        )
+
+        new_spline = self._intern_copy()
+        new_spline.points = new_points
+
+        return new_spline
+
     def _translate_wireframe(self, desloc_x: float, desloc_y: float
                              ) -> Wireframe:
         '''Translate internal object when is a wireframe and return copy'''
@@ -542,7 +625,10 @@ class Transformator:
             return self._scale_line(scale_x, scale_y)
 
         if isinstance(self._object, BezierCurve):
-            return self._scale_curve(scale_x, scale_y)
+            return self._scale_bezier_curve(scale_x, scale_y)
+
+        if isinstance(self._object, BSplineCurve):
+            return self._scale_bspline_curve(scale_x, scale_y)
 
         return self._scale_wireframe(scale_x, scale_y)
 
@@ -567,7 +653,7 @@ class Transformator:
         line.p2 = new_points[1]
         return line
 
-    def _scale_curve(self, scale_x: float, scale_y: float) -> BezierCurve:
+    def _scale_bezier_curve(self, scale_x: float, scale_y: float) -> BezierCurve:
         '''Scale internal when is a wireframe and return copy'''
         new_setups = []
         for setup in self._object.curves:
@@ -589,6 +675,23 @@ class Transformator:
         new_curve.curves = new_setups
 
         return new_curve
+
+    def _scale_bspline_curve(self, scale_x: float, scale_y: float) -> BSplineCurve:
+        '''Scale internal when is a wireframe and return copy'''
+        if isinstance(self._object, Point3D):
+            error = 'Trying to operate as line/wireframe over point'
+            raise TypeError(error)
+
+        new_points = scale_points_by_point(
+            points=self._object.points,
+            point=self.get_object_geometric_center(),
+            scale_x=scale_x,
+            scale_y=scale_y
+        )
+
+        new_spline = self._intern_copy()
+        new_spline.points = new_points
+        return new_spline
 
     def _scale_wireframe(self, scale_x: float, scale_y: float) -> Wireframe:
         '''Scale internal when is a wireframe and return copy'''
