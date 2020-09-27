@@ -69,8 +69,16 @@ def create_curve(name: str, tab: CurveTab) -> BezierCurve:
 
     return BezierCurve(name=name, curve_setups=setups)
 
-def create_spline(name: str, tab: BSplineTab) -> BSplineCurve:
-    
+
+def create_bspline(obj_name: str, tab: BSplineTab) -> BSplineCurve:
+    '''Take BSpline tab and create the BSpline object'''
+    points = []
+    for i, point in enumerate(tab.points_list):
+        x, y, z = point
+        point = Point3D('Po' + str(i).zfill(3), x, y, z)
+        points.append(point)
+
+    return BSplineCurve(name=obj_name, points=points)
 
 
 def new_object_factory(obj_name: str, tab_name: str, tab: QWidget):
@@ -92,7 +100,7 @@ def new_object_factory(obj_name: str, tab_name: str, tab: QWidget):
             return status, create_wireframe(obj_name, tab)
         elif tab_name == 'Curve':
             return status, create_curve(obj_name, tab)
-        elif tab_name == 'B Spline'
+        elif tab_name == 'BSpline':
             return status, create_bspline(obj_name, tab)
 
         raise ValueError(f'Invalid tab name: {tab_name}')

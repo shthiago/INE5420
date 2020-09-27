@@ -46,8 +46,8 @@ class NewObjectDialog(QtWidgets.QDialog):
         self.tab_panel.addTab(self.curve_tab, "Curve")
 
         # Add B Spline mechanism
-        self.bspline_tab = B_SplineDialog()
-        self.tab_panel.addTab(self.bspline_tab, "B Spline")
+        self.bspline_tab = BSplineTab()
+        self.tab_panel.addTab(self.bspline_tab, "BSpline")
 
         self.tab_panel.setCurrentIndex(0)
 
@@ -516,6 +516,7 @@ class CurveTab(QtWidgets.QWidget):
         self.points_model.clear()
         self.curves_list.clear()
 
+
 class BSplineTab(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
@@ -594,7 +595,6 @@ class BSplineTab(QtWidgets.QDialog):
         self.z_coord_pt_input.clear()
         self.points_model.clear()
         self.points_list.clear()
-
 
 
 # Transformation dialog items
