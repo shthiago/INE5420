@@ -203,24 +203,27 @@ class WeilerAthertonPolygonClipping:
                           ) -> List[Tuple[Point3D, _Type]]:
         '''Insert the point into edges list based on what edge
         line the point is from, considering a clockwise path'''
+        print(point)
 
         if point.x == self.setup.xmax:
             # Right edge
             index = edges.index((self.bot_right, _Type.ORIGINAL))
+            edges.insert(index, (point, p_type))
 
         elif point.x == self.setup.xmin:
             # Left edge
             index = edges.index((self.top_left, _Type.ORIGINAL))
+            edges.insert(index, (point, p_type))
 
         elif point.y == self.setup.ymin:
             # Bottom edge
             index = edges.index((self.bot_left, _Type.ORIGINAL))
+            edges.insert(index, (point, p_type))
 
         elif point.y == self.setup.ymax:
             # Top edge
             index = edges.index((self.top_right, _Type.ORIGINAL))
-
-        edges.insert(index, (point, p_type))
+            edges.insert(index, (point, p_type))
 
         return edges
 
