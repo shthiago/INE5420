@@ -3,8 +3,8 @@ from typing import List
 from PyQt5.QtWidgets import QWidget
 
 from src.model.objects import (Point3D, Line, Wireframe,
-                               BezierCurve, BezierCurveSetup)
-from src.view.dialog import LineTab, PointTab, CurveTab, WireframeTab
+                               BezierCurve, BezierCurveSetup, BSplineCurve)
+from src.view.dialog import LineTab, PointTab, CurveTab, WireframeTab, BSplineTab
 
 
 def create_line(name: str, tab: LineTab) -> Line:
@@ -69,6 +69,9 @@ def create_curve(name: str, tab: CurveTab) -> BezierCurve:
 
     return BezierCurve(name=name, curve_setups=setups)
 
+def create_spline(name: str, tab: BSplineTab) -> BSplineCurve:
+    
+
 
 def new_object_factory(obj_name: str, tab_name: str, tab: QWidget):
     """
@@ -89,6 +92,8 @@ def new_object_factory(obj_name: str, tab_name: str, tab: QWidget):
             return status, create_wireframe(obj_name, tab)
         elif tab_name == 'Curve':
             return status, create_curve(obj_name, tab)
+        elif tab_name == 'B Spline'
+            return status, create_bspline(obj_name, tab)
 
         raise ValueError(f'Invalid tab name: {tab_name}')
 

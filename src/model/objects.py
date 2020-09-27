@@ -222,6 +222,13 @@ class BezierCurve(BaseNamedColoredObject):
         values.reverse()
         return np.array(values)
 
+class BSplineCurve(BaseNamedColoredObject):
+        def __init__(self, name: str,
+                 thickness: int = 3):
+        super().__init__(name, QColor(0, 0, 0))
+        self.curves = curve_setups
+        self.thickness = thickness
+
 
 class ViewportObjectRepresentation(NamedTuple):
     '''Class to hold data of a object ready to be draw at viewport'''
