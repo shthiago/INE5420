@@ -242,6 +242,17 @@ class BezierCurve(BaseNamedColoredObject):
 
         values.reverse()
         return np.array(values)
+    
+    def describe_export_with(self, points: List[Tuple[float, float, float]],
+                             colors: List[QColor]) -> List[str]:
+        '''Return lines that describe object in .obj file, using indexes
+        from points and names from colors'''
+        indexes = [str(points.index(p) + 1) for p in self.as_list_of_tuples()]
+        return ['# Bezier',
+                f'o {self.name}',
+                f'usemtl {self.color.name()[1:]}',
+                f'f {" ".join(indexes)}']
+                #########################################
 
 
 class BSplineCurve(BaseNamedColoredObject):
@@ -324,6 +335,17 @@ class BSplineCurve(BaseNamedColoredObject):
             lines.append(line)
 
         return lines
+    
+    def describe_export_with(self, points: List[Tuple[float, float, float]],
+                             colors: List[QColor]) -> List[str]:
+        '''Return lines that describe object in .obj file, using indexes
+        from points and names from colors'''
+        indexes = [str(points.index(p) + 1) for p in self.as_list_of_tuples()]
+        return ['# Bezier',
+                f'o {self.name}',
+                f'usemtl {self.color.name()[1:]}',
+                f'f {" ".join(indexes)}']
+                #########################################
 
 
 class ViewportObjectRepresentation(NamedTuple):

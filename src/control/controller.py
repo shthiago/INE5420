@@ -63,27 +63,27 @@ class Controller:
         self.xvp_max = 590  # it was 600, changed for clipping proof
         self.yvp_max = 590  # it was 600, changed for clipping proof
 
-        self.add_object_to_list(
-            Wireframe('Quadradinho',
-                      points=[
-                          Point3D('__', x=0, y=0, z=0),
-                          Point3D('__', x=100, y=0, z=0),
-                          Point3D('__', x=100, y=100, z=0),
-                          Point3D('__', x=0, y=100, z=0),
-                      ])
-        )
+    #    self.add_object_to_list(
+     #       Wireframe('Quadradinho',
+      #                points=[
+       #                   Point3D('__', x=0, y=0, z=0),
+        #                  Point3D('__', x=100, y=0, z=0),
+         #                 Point3D('__', x=100, y=100, z=0),
+          #                Point3D('__', x=0, y=100, z=0),
+           #           ])
+        #)
 
-        self.add_object_to_list(
-            BSplineCurve('Spline',
-                         points=[
-                             Point3D('_', x=0, y=0, z=0),
-                             Point3D('_', x=-100, y=200, z=0),
-                             Point3D('_', x=-200, y=0, z=0),
-                             Point3D('_', x=-300, y=-200, z=0),
-                             Point3D('_', x=-400, y=0, z=0),
-                             Point3D('_', x=-500, y=500, z=0),
-                         ])
-        )
+        #self.add_object_to_list(
+         #   BSplineCurve('Spline',
+          #               points=[
+           #                  Point3D('_', x=0, y=0, z=0),
+            #                 Point3D('_', x=-100, y=200, z=0),
+             #                Point3D('_', x=-200, y=0, z=0),
+              #               Point3D('_', x=-300, y=-200, z=0),
+               #              Point3D('_', x=-400, y=0, z=0),
+                #             Point3D('_', x=-500, y=500, z=0),
+                 #        ])
+        #)
 
         self._process_viewport()
 
@@ -312,6 +312,7 @@ class Controller:
 
     def _generate_export_files(self) -> Tuple[List[str], List[str]]:
         '''Generate list of points and object session for each object'''
+
         points = self._collect_all_points()
         colors = self._collect_all_colors()
 

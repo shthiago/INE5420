@@ -93,14 +93,14 @@ def read_objfile(fname: str) -> dict:
 
     # Reindex vertices to be in face index order, then remove face indices.
     verts = {key: np.array(value) for key, value in verts.items()}
-    print(verts)
+
     for obj in obj_props:
         if not obj['f']:
             continue
 
         obj['f'] = tuple(np.array(verts) if verts[0] else tuple() for verts in zip(*obj['f']))
         for idx, vertname in enumerate(['v', 'vt', 'vn']):
-            print(verts)
+
             if vertname in verts:
                 obj[vertname] = verts[vertname][obj['f'][idx].flatten() - 1, :]
             else:
