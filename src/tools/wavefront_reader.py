@@ -62,6 +62,7 @@ def read_objfile(fname: str) -> dict:
         lines = file.read().splitlines()
 
     for line in lines:
+        curvetype = ''
 
         if not line.strip():
             continue
@@ -83,10 +84,21 @@ def read_objfile(fname: str) -> dict:
             obj = obj_props[-1]
             obj['f'] = []
             obj['o'] = fname
+        elif prefix == 'cstype':
+            curvetype = value
+        elif prefix == 'curve2d':
+            obj_props.append({})
+            obj = obj_props[-1]
+            obj['f'] = []
+            obj['o'] = fname
+            obj['curvetype'] = curvetype
+
         if obj_props:
             if prefix[0] == 'v':
                 verts[prefix].append([float(val) for val in value.split(' ')])
             elif prefix == 'f' or prefix == 'l' or prefix == 'p':
+                obj['f'].append(parse_mixed_delim_str(value))
+            elif prefix == 'curve2d':
                 obj['f'].append(parse_mixed_delim_str(value))
             else:
                 obj[prefix] = value

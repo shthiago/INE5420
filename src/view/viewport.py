@@ -25,7 +25,7 @@ class ViewPort(QtWidgets.QLabel):
         '''
         self.setStyleSheet(stylesheet)
 
-        # Varaible to hold objects to be drew
+        # Varaible to hold objects to be drawn
         self.objects: List[ViewportObjectRepresentation] = []
 
     def draw_objects(self, objects: List[ViewportObjectRepresentation]):

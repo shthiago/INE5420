@@ -63,26 +63,16 @@ class Controller:
         self.xvp_max = 590  # it was 600, changed for clipping proof
         self.yvp_max = 590  # it was 600, changed for clipping proof
 
-    #    self.add_object_to_list(
-     #       Wireframe('Quadradinho',
-      #                points=[
-       #                   Point3D('__', x=0, y=0, z=0),
-        #                  Point3D('__', x=100, y=0, z=0),
-         #                 Point3D('__', x=100, y=100, z=0),
-          #                Point3D('__', x=0, y=100, z=0),
-           #           ])
-        #)
-
         #self.add_object_to_list(
-         #   BSplineCurve('Spline',
-          #               points=[
-           #                  Point3D('_', x=0, y=0, z=0),
-            #                 Point3D('_', x=-100, y=200, z=0),
-             #                Point3D('_', x=-200, y=0, z=0),
-              #               Point3D('_', x=-300, y=-200, z=0),
-               #              Point3D('_', x=-400, y=0, z=0),
-                #             Point3D('_', x=-500, y=500, z=0),
-                 #        ])
+        #    BSplineCurve('Spline',
+        #                 control_points=[
+        #                     Point3D('_', x=0, y=0, z=0),
+        #                     Point3D('_', x=-100, y=200, z=0),
+        #                     Point3D('_', x=-200, y=0, z=0),
+        #                     Point3D('_', x=-300, y=-200, z=0),
+        #                     Point3D('_', x=-400, y=0, z=0),
+        #                     Point3D('_', x=-500, y=500, z=0),
+        #                 ])
         #)
 
         self._process_viewport()
@@ -480,7 +470,7 @@ class Controller:
         """
         Take step value from input and apply zoom
 
-        Paramters
+        Parameters
         ----------
         mode: str
             'in' or 'out'
@@ -610,7 +600,7 @@ class Controller:
         )
 
         objects_list = []
-        curve_step = 0.1
+        curve_step = 0.01
         for obj in self.display_file:
             if isinstance(obj, BezierCurve) or isinstance(obj, BSplineCurve):
                 # Switch the curve by its points

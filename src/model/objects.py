@@ -252,25 +252,32 @@ class BezierCurve(BaseNamedColoredObject):
                 f'o {self.name}',
                 f'usemtl {self.color.name()[1:]}',
                 f'f {" ".join(indexes)}']
-                #########################################
 
 
 class BSplineCurve(BaseNamedColoredObject):
     '''BSpline object descriptor'''
 
-    def __init__(self, name: str, points: List[Point3D], thickness: int = 3):
-        if len(points) < 4:
+    def __init__(self, name: str, control_points: List[Point3D], thickness: int = 3):
+        if len(control_points) < 4:
             raise ValueError('BSpline needs at least 4 points')
         super().__init__(name, QColor(0, 0, 0))
         self.thickness = thickness
 
-        self.points = points
+        self.control_points = control_points
+        self.line_as_points = self.calculate_lines(0.1)
 
     def as_list_of_tuples(self) -> List[Tuple[int, int, int]]:
         '''Return points as list of tuples'''
         tuples = []
-        for point in self.points:
-            tuples.append((point.x, point.y, point.z))
+        # if you are exporting all the lines
+        #tuples.append((self.line_as_points[0].p1.x, self.line_as_points[0].p1.y, self.line_as_points[0].p1.z))
+        #for line in self.line_as_points:
+        #    tuples.append((line.p2.x, line.p2.y, line.p2.z))
+
+        # if you are exporting the control points
+        for points in self.control_points:
+            tuples.append((points.x, points.y, points.z))
+        
 
         return tuples
 
@@ -313,7 +320,7 @@ class BSplineCurve(BaseNamedColoredObject):
                         [1, 4, 1, 0]])
         Mbs = Mbs / 6
 
-        G = np.array([[p.x, p.y] for p in self.points])
+        G = np.array([[p.x, p.y] for p in self.control_points])
         E = self._E_coef(delta)
         steps = int(1/delta)
         points = []
@@ -340,12 +347,15 @@ class BSplineCurve(BaseNamedColoredObject):
                              colors: List[QColor]) -> List[str]:
         '''Return lines that describe object in .obj file, using indexes
         from points and names from colors'''
+
+        #index from all points
         indexes = [str(points.index(p) + 1) for p in self.as_list_of_tuples()]
-        return ['# Bezier',
+
+        return ['# BSpline',
                 f'o {self.name}',
                 f'usemtl {self.color.name()[1:]}',
-                f'f {" ".join(indexes)}']
-                #########################################
+                f'cstype bspline',
+                f'curv2 {" ".join(indexes)}']
 
 
 class ViewportObjectRepresentation(NamedTuple):
