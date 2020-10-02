@@ -235,6 +235,7 @@ class Controller:
     def _import_from_file(self, file: str):
         '''Call wavefront loaders'''
         geoms = read_wavefront(file)
+        print(geoms)
 
         for name, props in geoms.items():
             if not 'v' in props:
@@ -274,6 +275,7 @@ class Controller:
 
             elif len(points) > 2:
                 # Is a wireframe
+                print('chegou em criar a wireframe')
                 wireframe = Wireframe(name=name, points=points)
                 wireframe.color = color
                 self.add_object_to_list(wireframe)

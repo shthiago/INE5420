@@ -62,6 +62,7 @@ def read_objfile(fname: str) -> dict:
         lines = file.read().splitlines()
 
     for line in lines:
+        print('line->',line)
         curvetype = ''
 
         if not line.strip():
@@ -69,10 +70,13 @@ def read_objfile(fname: str) -> dict:
 
         split_line = line.strip().split(' ', 1)
         if '#' in split_line[0] or len(split_line) < 2:
+            print('ignored commented line:', split_line)
             # Ignore comments and empty lines
             continue
 
         prefix, value = split_line[0], split_line[1]
+        print('prefix:' + prefix)
+        print('value:' + value)
         if prefix == 'o':
             obj_props.append({})
             obj = obj_props[-1]
@@ -97,8 +101,6 @@ def read_objfile(fname: str) -> dict:
             if prefix[0] == 'v':
                 verts[prefix].append([float(val) for val in value.split(' ')])
             elif prefix == 'f' or prefix == 'l' or prefix == 'p':
-                obj['f'].append(parse_mixed_delim_str(value))
-            elif prefix == 'curve2d':
                 obj['f'].append(parse_mixed_delim_str(value))
             else:
                 obj[prefix] = value

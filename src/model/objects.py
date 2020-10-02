@@ -227,6 +227,8 @@ class BezierCurve(BaseNamedColoredObject):
                 (setup.P3.x, setup.P3.y, setup.P3.z),
                 (setup.P4.x, setup.P4.y, setup.P4.z),
             ])
+        
+        return tuples
 
     def _t_vec(self, t_value: float) -> np.ndarray:
         '''Calcualte the T vector for points
@@ -251,7 +253,8 @@ class BezierCurve(BaseNamedColoredObject):
         return ['# Bezier',
                 f'o {self.name}',
                 f'usemtl {self.color.name()[1:]}',
-                f'f {" ".join(indexes)}']
+                f'cstype bezier',
+                f'curv2 {" ".join(indexes)}']
 
 
 class BSplineCurve(BaseNamedColoredObject):
