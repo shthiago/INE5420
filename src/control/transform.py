@@ -5,7 +5,7 @@ from statistics import mean
 from copy import deepcopy
 
 import numpy as np
-from src.model.objects import Point3D, Line, Wireframe, BezierCurve, BezierCurveSetup, BSplineCurve
+from src.model.objects import Point3D, Line, Wireframe, BezierCurve, BezierCurveSetup, BSplineCurve, Object3D
 
 
 def transform(points: List[Point3D], matrix: np.ndarray) -> List[Point3D]:
@@ -290,10 +290,10 @@ class Transformator:
             rotation_axis=self._rotation_axis
         )
 
-        wireframe = self._intern_copy()
-        wireframe.points = new_points
+        new_obj = self._intern_copy()
+        new_obj.points = new_points
 
-        return wireframe
+        return new_obj
 
     def rotate_by_degrees_origin(self, angle: float,
                                  rotation_axis: str) -> Union[Point3D, Line, Wireframe, BezierCurve]:
@@ -397,10 +397,10 @@ class Transformator:
             rotation_axis=self._rotation_axis
         )
 
-        wireframe = self._intern_copy()
-        wireframe.points = new_points
+        new_obj = self._intern_copy()
+        new_obj.points = new_points
 
-        return wireframe
+        return new_obj
 
     def _rotate_internal_point_over_origin(self, angle: float) -> Point3D:
         '''Rotate when internal is a point and return copy of object'''
@@ -506,10 +506,10 @@ class Transformator:
             rotation_axis=self._rotation_axis
         )
 
-        wireframe = self._intern_copy()
-        wireframe.points = new_points
+        new_obj = self._intern_copy()
+        new_obj.points = new_points
 
-        return wireframe
+        return new_obj
 
     def _rotate_internal_bspline_curve_over_point(self, angle: float,
                                                   point: Point3D) -> BSplineCurve:
@@ -663,10 +663,10 @@ class Transformator:
             desloc_z=desloc_z
         )
 
-        wireframe = self._intern_copy()
-        wireframe.points = new_points
+        new_obj = self._intern_copy()
+        new_obj.points = new_points
 
-        return wireframe
+        return new_obj
 
     def scale(self, scale_x: float, scale_y: float, scale_z: float
               ) -> Union[Point3D, Line, Wireframe, BezierCurve]:
@@ -764,12 +764,10 @@ class Transformator:
             scale_z=scale_z
         )
 
-        wireframe = self._intern_copy()
-        if not isinstance(wireframe, Wireframe):
-            raise TypeError('Internal object is not wireframe')
+        new_obj = self._intern_copy()
+        new_obj.points = new_points
 
-        wireframe.points = new_points
-        return wireframe
+        return new_obj
 
     def _intern_copy(self) -> Union[Point3D, Line, Wireframe, BezierCurve]:
         '''Return deepcopy of internal object'''
@@ -821,7 +819,7 @@ class Normalizer:
             return self._normalize_line(obj)
 
         if isinstance(obj, Wireframe):
-            return self._normalize_wireframe_and_obj3d(obj)
+            return self._normalize_wireframe(obj)
 
         raise TypeError(f'Invaldi type for normalization: {obj}')
 
@@ -842,7 +840,7 @@ class Normalizer:
 
         return new_line
 
-    def _normalize_wireframe_and_obj3d(self, wireframe: Wireframe) -> Wireframe:
+    def _normalize_wireframe(self, wireframe: Wireframe) -> Wireframe:
         '''Apply normalization to wireframe'''
         points = transform(wireframe.points, self._normalization_matrix)
 

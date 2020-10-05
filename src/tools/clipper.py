@@ -149,14 +149,14 @@ class LiangBarskyLineClipping:
             name='_p1',
             x=self.line.p1.x + self.pq_list[1]['p'] * u1,
             y=self.line.p1.y + self.pq_list[3]['p'] * u1,
-            z=self.line.p1.z
+            z=0
         )
 
         new_line.p2 = Point3D(
             name='_p2',
             x=self.line.p1.x + self.pq_list[1]['p'] * u2,
             y=self.line.p1.y + self.pq_list[3]['p'] * u2,
-            z=self.line.p1.z
+            z=0
         )
 
         return new_line
@@ -203,22 +203,23 @@ class WeilerAthertonPolygonClipping:
                           ) -> List[Tuple[Point3D, _Type]]:
         '''Insert the point into edges list based on what edge
         line the point is from, considering a clockwise path'''
-        if point.x == self.setup.xmax:
+
+        if isclose(point.x, self.setup.xmax, abs_tol=1e-6):
             # Right edge
             index = edges.index((self.bot_right, _Type.ORIGINAL))
             edges.insert(index, (point, p_type))
 
-        elif point.x == self.setup.xmin:
+        elif isclose(point.x, self.setup.xmin, abs_tol=1e-6):
             # Left edge
             index = edges.index((self.top_left, _Type.ORIGINAL))
             edges.insert(index, (point, p_type))
 
-        elif point.y == self.setup.ymin:
+        elif isclose(point.y, self.setup.ymin, abs_tol=1e-6):
             # Bottom edge
             index = edges.index((self.bot_left, _Type.ORIGINAL))
             edges.insert(index, (point, p_type))
 
-        elif point.y == self.setup.ymax:
+        elif isclose(point.y, self.setup.ymax, abs_tol=1e-6):
             # Top edge
             index = edges.index((self.top_right, _Type.ORIGINAL))
             edges.insert(index, (point, p_type))
@@ -305,6 +306,7 @@ class WeilerAthertonPolygonClipping:
                 index = (index + 1) % sub_len
 
             edges_len = len(edges)
+
             index = (edges.index(
                 (new_polygon_points[-1], curr_type)) + 1) % edges_len
 

@@ -2,6 +2,7 @@
 File for modeling objects to be stored
 """
 from typing import List, NamedTuple, Tuple
+from math import isclose
 
 import numpy as np
 from PyQt5.QtGui import QColor
@@ -59,7 +60,8 @@ class Point3D(BaseNamedColoredObject):
         return (self.x, self.y, self.z)
 
     def __eq__(self, other) -> bool:
-        return self.x == other.x and self.y == other.y
+        return all([isclose(other.x, self.x, abs_tol=1e-4),
+                    isclose(other.y, self.y, abs_tol=1e-4)])
 
     def __ne__(self, other) -> bool:
         return not self.__eq__(other)
