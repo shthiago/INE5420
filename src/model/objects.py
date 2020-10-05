@@ -38,7 +38,7 @@ class Point3D(BaseNamedColoredObject):
         self.thickness = thickness
 
     def __repr__(self):
-        return f'({self.x} {self.y} {self.z})'
+        return f'"{self.name}"->({self.x} {self.y} {self.z})'
 
     def as_list_of_tuples(self) -> List[Tuple[float, float, float]]:
         '''Return points as [(x, y, z)]'''
@@ -263,7 +263,7 @@ class BSplineCurve(BaseNamedColoredObject):
 
         return tuples
 
-    def _E_coef(self, delta: float) -> np.array:
+    def _e_coef(self, delta: float) -> np.array:
         '''Generate the E matrix for calculating curve plot'''
         return np.array([
             [0, 0, 0, 1],
@@ -303,7 +303,7 @@ class BSplineCurve(BaseNamedColoredObject):
         Mbs = Mbs / 6
 
         G = np.array([[p.x, p.y] for p in self.points])
-        E = self._E_coef(delta)
+        E = self._e_coef(delta)
         steps = int(1/delta)
         points = []
         for i in range(3, len(G)):
@@ -324,6 +324,36 @@ class BSplineCurve(BaseNamedColoredObject):
             lines.append(line)
 
         return lines
+
+
+class Object3D(BaseNamedColoredObject):
+    '''Object composed by 3D Points and faces'''
+
+    def __init__(self, name: str, points: List[Point3D],
+                 faces: List[List[int]], thickness: int = 3):
+        super().__init__(name, QColor(0, 0, 0))
+        self.thickness = thickness
+
+        self.faces = faces
+        self.points = points
+
+    def get_wireframes(self) -> List[Wireframe]:
+        '''Connect the points for each face and return list of wireframes'''
+        wireframes = []
+        for face in self.faces:
+            points = []
+            for index in face:
+                points.append(self.points[index])
+
+            wireframe = Wireframe(
+                name='__',
+                points=points,
+                thickness=self.thickness
+            )
+            wireframe.color = self.color
+
+            wireframes.append(wireframe)
+        return wireframes
 
 
 class ViewportObjectRepresentation(NamedTuple):

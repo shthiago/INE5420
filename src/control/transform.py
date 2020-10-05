@@ -13,49 +13,78 @@ def transform(points: List[Point3D], matrix: np.ndarray) -> List[Point3D]:
     new_points: List[Point3D] = []
 
     for point in points:
-        np_point = np.array([point.x, point.y, 1])
+        np_point = np.array([point.x, point.y, point.z, 1])
         new_point = np_point.dot(matrix)
 
         new_points.append(Point3D(
             name=point.name,
             x=new_point[0],
             y=new_point[1],
-            z=point.z
+            z=new_point[2]
         ))
 
     return new_points
 
 
-def get_translation_matrix(desloc_x: float, desloc_y: float) -> np.ndarray:
+def get_translation_matrix(desloc_x: float, desloc_y: float, desloc_z: float) -> np.ndarray:
     '''Create the translation matrix from the deslocation vector'''
     return np.array(
         [
-            [1, 0, 0],
-            [0, 1, 0],
-            [desloc_x, desloc_y, 1]
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [desloc_x, desloc_y, desloc_z, 1]
         ]
     )
 
 
-def get_scaling_matrix(scale_x: float, scale_y: float) -> np.ndarray:
+def get_scaling_matrix(scale_x: float, scale_y: float, scale_z: float) -> np.ndarray:
     '''Create the scaling matrix from the scale factors'''
     return np.array(
         [
-            [scale_x, 0, 0],
-            [0, scale_y, 0],
-            [0, 0, 1]
+            [scale_x, 0, 0, 0],
+            [0, scale_y, 0, 0],
+            [0, 0, scale_z, 0],
+            [0, 0, 0, 1]
         ]
     )
 
 
-def get_rotation_matrix_from_degrees(angle: float) -> np.ndarray:
-    '''Create the rotation matrix from the angle in degrees'''
+def get_rz_rotation_matrix_from_degrees(angle: float) -> np.ndarray:
+    '''Create the rotation matrix from the angle in degrees, for z axis'''
     rad_angle = radians(angle)
     return np.array(
         [
-            [cos(rad_angle), -sin(rad_angle), 0],
-            [sin(rad_angle), cos(rad_angle), 0],
-            [0, 0, 1]
+            [cos(rad_angle), -sin(rad_angle), 0, 0],
+            [sin(rad_angle), cos(rad_angle), 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ]
+    )
+
+
+def get_ry_rotation_matrix_from_degrees(angle: float) -> np.ndarray:
+    '''Create the rotation matrix from the angle in degrees, for y axis'''
+    rad_angle = radians(angle)
+    return np.array(
+        [
+            [cos(rad_angle), 0, sin(rad_angle), 0],
+            [0, 1, 0, 0],
+            [-sin(rad_angle), 0, cos(rad_angle), 0],
+            [0, 0, 0, 1]
+        ]
+    )
+
+
+def get_rx_rotation_matrix_from_degrees(angle: float) -> np.ndarray:
+    '''Create the rotation matrix from the angle in degrees, for x axis'''
+    rad_angle = radians(angle)
+    return np.array(
+        [
+            [1, 0, 0, 0],
+            [0, cos(rad_angle), sin(rad_angle), 0],
+            [0, -sin(rad_angle), cos(rad_angle), 0],
+            [0, 0, 0, 1]
         ]
     )
 
@@ -71,43 +100,44 @@ def concat_transformation_matrixes(matrixes: List[np.ndarray]) -> np.ndarray:
 
 def rotate_points_over_point_by_degrees(points: List[Point3D],
                                         point: Point3D,
-                                        angle: float) -> List[Point3D]:
+                                        angle: float,
+                                        rotation_axis: str) -> List[Point3D]:
     '''Rotate list of points over a input point'''
+    if rotation_axis not in ['x', 'y', 'z']:
+        raise ValueError(f'Invalid rotation axis: {rotation_axis}')
+
+    if rotation_axis == 'x':
+        rotation_matrix = get_rx_rotation_matrix_from_degrees(angle)
+    elif rotation_axis == 'y':
+        rotation_matrix = get_ry_rotation_matrix_from_degrees(angle)
+    else:  # z axis
+        rotation_matrix = get_rz_rotation_matrix_from_degrees(angle)
 
     transformation_matrix = concat_transformation_matrixes([
-        get_translation_matrix(-point.x, -point.y),
-        get_rotation_matrix_from_degrees(angle),
-        get_translation_matrix(point.x, point.y),
+        get_translation_matrix(-point.x, -point.y, -point.z),
+        rotation_matrix,
+        get_translation_matrix(point.x, point.y, point.z),
     ])
 
     return transform(points, transformation_matrix)
 
 
-def rotate_points_over_origin_by_degrees(points: List[Point3D],
-                                         angle: float) -> List[Point3D]:
-    '''Rotate list of points over origin'''
-
-    transformation_matrix = get_rotation_matrix_from_degrees(angle)
-
-    return transform(points, transformation_matrix)
-
-
 def translate_points(points: List[Point3D],
-                     desloc_x: float, desloc_y: float) -> List[Point3D]:
+                     desloc_x: float, desloc_y: float, desloc_z: float) -> List[Point3D]:
     '''Translate list of points by deslocation values'''
-    translation_matrix = get_translation_matrix(desloc_x, desloc_y)
+    translation_matrix = get_translation_matrix(desloc_x, desloc_y, desloc_z)
 
     return transform(points, translation_matrix)
 
 
 def scale_points_by_point(points: List[Point3D], scale_x: float,
-                          scale_y: float, point: Point3D
+                          scale_y: float, scale_z: float, point: Point3D
                           ) -> List[Point3D]:
     '''Scale points, moving their origin to point before'''
     transformation_matrix = concat_transformation_matrixes([
-        get_translation_matrix(-point.x, -point.y),
-        get_scaling_matrix(scale_x, scale_y),
-        get_translation_matrix(point.x, point.y)
+        get_translation_matrix(-point.x, -point.y, -point.z),
+        get_scaling_matrix(scale_x, scale_y, scale_z),
+        get_translation_matrix(point.x, point.y, point.z)
     ])
 
     return transform(points, transformation_matrix)
@@ -119,6 +149,9 @@ class Transformator:
     def __init__(self, obj: Union[Point3D, Line, Wireframe, BezierCurve]):
         '''Initialize with a intern target object'''
         self._object: Union[Point3D, Line, Wireframe, BezierCurve] = obj
+
+        # Internal value to define rotation axis
+        self._rotation_axis = 'z'
 
     def get_object_geometric_center(self) -> Point3D:
         '''Get geometrix center of intern object'''
@@ -140,18 +173,23 @@ class Transformator:
             z=mean(map(lambda p: p.z, points))
         )
 
-    def rotate_by_degrees_geometric_center(self, angle: float
+    def rotate_by_degrees_geometric_center(self, angle: float,
+                                           rotation_axis: str
                                            ) -> Union[Point3D,
                                                       Line,
                                                       Wireframe,
                                                       BezierCurve]:
         '''Rotate over center intern object in by angle an input angle
 
-           Parameters
-           ----------
-           angle: float
-                Angle in degrees
+        Parameters
+        ----------
+        angle: float
+            Angle in degrees
+        rotation_axis: str
+            x, y or z
         '''
+
+        self._rotation_axis = rotation_axis
 
         if isinstance(self._object, Point3D):
             # Rotating and Point3D over its center makes no difference
@@ -180,7 +218,8 @@ class Transformator:
         new_points = rotate_points_over_point_by_degrees(
             points=self._object.points,
             point=center,
-            angle=angle
+            angle=angle,
+            rotation_axis=self._rotation_axis
         )
 
         line = Line(
@@ -201,7 +240,7 @@ class Transformator:
         for setup in self._object.curves:
             points = [setup.P1, setup.P2, setup.P3, setup.P4]
             new_points = rotate_points_over_point_by_degrees(
-                points, center, angle)
+                points, center, angle, self._rotation_axis)
             new_setups.append(BezierCurveSetup(
                 P1=new_points[0],
                 P2=new_points[1],
@@ -226,7 +265,8 @@ class Transformator:
         new_points = rotate_points_over_point_by_degrees(
             points=self._object.points,
             point=center,
-            angle=angle
+            angle=angle,
+            rotation_axis=self._rotation_axis
         )
 
         new_spline = self._intern_copy()
@@ -246,26 +286,28 @@ class Transformator:
         new_points = rotate_points_over_point_by_degrees(
             points=self._object.points,
             point=center,
-            angle=angle
+            angle=angle,
+            rotation_axis=self._rotation_axis
         )
 
-        wireframe = Wireframe(
-            name=self._object.name,
-            points=new_points
-        )
-        wireframe.color = self._object.color
+        wireframe = self._intern_copy()
+        wireframe.points = new_points
 
         return wireframe
 
-    def rotate_by_degrees_origin(self, angle: float
-                                 ) -> Union[Point3D, Line, Wireframe, BezierCurve]:
+    def rotate_by_degrees_origin(self, angle: float,
+                                 rotation_axis: str) -> Union[Point3D, Line, Wireframe, BezierCurve]:
         '''Rotate intern object in by angle an input angle
 
-           Parameters
-           ----------
-           angle: float
-                Angle in degrees
+        Parameters
+        ----------
+        angle: float
+            Angle in degrees
+        rotation_axis: str
+            x, y or z
         '''
+
+        self._rotation_axis = rotation_axis
 
         if isinstance(self._object, Point3D):
             # Rotating and Point3D over its center makes no difference
@@ -287,8 +329,8 @@ class Transformator:
         new_setups = []
         for setup in self._object.curves:
             points = [setup.P1, setup.P2, setup.P3, setup.P4]
-            new_points = rotate_points_over_origin_by_degrees(
-                points, angle)
+            new_points = rotate_points_over_point_by_degrees(
+                points, Point3D('_', 0, 0, 0), angle, self._rotation_axis)
             new_setups.append(BezierCurveSetup(
                 P1=new_points[0],
                 P2=new_points[1],
@@ -308,9 +350,11 @@ class Transformator:
             error = 'Trying to operate as line/wireframe over point'
             raise TypeError(error)
 
-        new_points = rotate_points_over_origin_by_degrees(
+        new_points = rotate_points_over_point_by_degrees(
             points=self._object.points,
-            angle=angle
+            point=Point3D('_', 0, 0, 0),
+            angle=angle,
+            rotation_axis=self._rotation_axis
         )
 
         line = Line(
@@ -328,9 +372,11 @@ class Transformator:
             error = 'Trying to operate as line/wireframe over point'
             raise TypeError(error)
 
-        new_points = rotate_points_over_origin_by_degrees(
+        new_points = rotate_points_over_point_by_degrees(
             points=self._object.points,
-            angle=angle
+            point=Point3D('_', 0, 0, 0),
+            angle=angle,
+            rotation_axis=self._rotation_axis
         )
 
         new_spline = self._intern_copy()
@@ -344,16 +390,15 @@ class Transformator:
             error = 'Trying to operate as line/wireframe over point'
             raise TypeError(error)
 
-        new_points = rotate_points_over_origin_by_degrees(
+        new_points = rotate_points_over_point_by_degrees(
             points=self._object.points,
-            angle=angle
+            point=Point3D('_', 0, 0, 0),
+            angle=angle,
+            rotation_axis=self._rotation_axis
         )
 
-        wireframe = Wireframe(
-            name=self._object.name,
-            points=new_points
-        )
-        wireframe.color = self._object.color
+        wireframe = self._intern_copy()
+        wireframe.points = new_points
 
         return wireframe
 
@@ -363,24 +408,30 @@ class Transformator:
             error = 'Trying to operate as point over:'
             raise TypeError(error + str(type(self._object)))
 
-        rotated = rotate_points_over_origin_by_degrees(
+        rotated = rotate_points_over_point_by_degrees(
             points=[self._object],
-            angle=angle)[0]
+            point=Point3D('_', 0, 0, 0),
+            angle=angle,
+            rotation_axis=self._rotation_axis)[0]
 
         rotated.color = self._object.color
         return rotated
 
-    def rotate_by_degrees_point(self, angle: float, point: Point3D
-                                ) -> Union[Point3D, Line, Wireframe, BezierCurve]:
+    def rotate_by_degrees_point(self, angle: float, point: Point3D,
+                                rotation_axis: str) -> Union[Point3D, Line, Wireframe, BezierCurve]:
         '''Rotate intern object in by an input angle over point
 
-           Parameters
-           ----------
-           angle: float
-                Angle in degrees
-           point: Point3D
-                Point to ratate over
+        Parameters
+        ----------
+        angle: float
+            Angle in degrees
+        point: Point3D
+            Point to ratate over
+        rotation_axis: str
+            x, y or z
         '''
+
+        self._rotation_axis = rotation_axis
 
         if isinstance(self._object, Point3D):
             # Rotating and Point3D over its center makes no difference
@@ -404,7 +455,7 @@ class Transformator:
         for setup in self._object.curves:
             points = [setup.P1, setup.P2, setup.P3, setup.P4]
             new_points = rotate_points_over_point_by_degrees(
-                points, point, angle)
+                points, point, angle, self._rotation_axis)
             new_setups.append(BezierCurveSetup(
                 P1=new_points[0],
                 P2=new_points[1],
@@ -428,7 +479,8 @@ class Transformator:
         new_points = rotate_points_over_point_by_degrees(
             points=self._object.points,
             point=point,
-            angle=angle
+            angle=angle,
+            rotation_axis=self._rotation_axis
         )
 
         line = Line(
@@ -450,14 +502,12 @@ class Transformator:
         new_points = rotate_points_over_point_by_degrees(
             points=self._object.points,
             point=point,
-            angle=angle
+            angle=angle,
+            rotation_axis=self._rotation_axis
         )
 
-        wireframe = Wireframe(
-            name=self._object.name,
-            points=new_points
-        )
-        wireframe.color = self._object.color
+        wireframe = self._intern_copy()
+        wireframe.points = new_points
 
         return wireframe
 
@@ -471,7 +521,8 @@ class Transformator:
         new_points = rotate_points_over_point_by_degrees(
             points=self._object.points,
             point=point,
-            angle=angle
+            angle=angle,
+            rotation_axis=self._rotation_axis
         )
 
         new_spline = self._intern_copy()
@@ -489,37 +540,39 @@ class Transformator:
         rotated = rotate_points_over_point_by_degrees(
             points=[self._object],
             point=point,
-            angle=angle)[0]
+            angle=angle,
+            rotation_axis=self._rotation_axis)[0]
 
         rotated.color = self._object.color
         return rotated
 
-    def translate_by_vector(self, desloc_x: float, desloc_y: float
+    def translate_by_vector(self, desloc_x: float, desloc_y: float, desloc_z: float
                             ) -> Union[Point3D, Line, Wireframe, BezierCurve]:
         '''Translate internal object by deslocation values'''
         if isinstance(self._object, Point3D):
-            return self._translate_point_by_vector(desloc_x, desloc_y)
+            return self._translate_point_by_vector(desloc_x, desloc_y, desloc_z)
 
         if isinstance(self._object, Line):
-            return self._translate_line_by_vector(desloc_x, desloc_y)
+            return self._translate_line_by_vector(desloc_x, desloc_y, desloc_z)
 
         if isinstance(self._object, BezierCurve):
-            return self._translate_bezier_curve_by_vector(desloc_x, desloc_y)
+            return self._translate_bezier_curve_by_vector(desloc_x, desloc_y, desloc_z)
 
         if isinstance(self._object, BSplineCurve):
-            return self._translate_spline_curve_by_vector(desloc_x, desloc_y)
+            return self._translate_spline_curve_by_vector(desloc_x, desloc_y, desloc_z)
 
-        return self._translate_wireframe(desloc_x, desloc_y)
+        return self._translate_wireframe_and_obj3d(desloc_x, desloc_y, desloc_z)
 
-    def translate_to_point(self, point_x: float, point_y: float):
+    def translate_to_point(self, point_x: float, point_y: float, point_z: float):
         '''Translate internal object to absolute point'''
         # Calcualte vector to take object to target position
         center = self.get_object_geometric_center()
 
         return self.translate_by_vector(point_x - center.x,
-                                        point_y - center.y)
+                                        point_y - center.y,
+                                        point_z - center.z)
 
-    def _translate_point_by_vector(self, desloc_x: float, desloc_y: float) -> Point3D:
+    def _translate_point_by_vector(self, desloc_x: float, desloc_y: float, desloc_z: float) -> Point3D:
         '''Translate internal object when is a point and return copy'''
         if not isinstance(self._object, Point3D):
             error = 'Trying to operate as point over:'
@@ -528,19 +581,20 @@ class Transformator:
         translated = translate_points(
             points=[self._object],
             desloc_x=desloc_x,
-            desloc_y=desloc_y
+            desloc_y=desloc_y,
+            desloc_z=desloc_z
         )[0]
         translated.color = self._object.color
 
         return translated
 
-    def _translate_bezier_curve_by_vector(self, desloc_x: float, desloc_y: float) -> Line:
+    def _translate_bezier_curve_by_vector(self, desloc_x: float, desloc_y: float, desloc_z: float) -> Line:
         '''Translate internal object when is a curve and return copy'''
         new_setups = []
         for setup in self._object.curves:
             points = [setup.P1, setup.P2, setup.P3, setup.P4]
             new_points = translate_points(
-                points, desloc_x, desloc_y)
+                points, desloc_x, desloc_y, desloc_z)
             new_setups.append(BezierCurveSetup(
                 P1=new_points[0],
                 P2=new_points[1],
@@ -554,7 +608,7 @@ class Transformator:
 
         return new_curve
 
-    def _translate_line_by_vector(self, desloc_x: float, desloc_y: float) -> Line:
+    def _translate_line_by_vector(self, desloc_x: float, desloc_y: float, desloc_z: float) -> Line:
         '''Translate internal object when is a line and return copy'''
         if isinstance(self._object, Point3D):
             error = 'Trying to operate as line/wireframe over point'
@@ -563,7 +617,8 @@ class Transformator:
         new_points = translate_points(
             points=self._object.points,
             desloc_x=desloc_x,
-            desloc_y=desloc_y
+            desloc_y=desloc_y,
+            desloc_z=desloc_z
         )
 
         line = Line(
@@ -575,7 +630,7 @@ class Transformator:
 
         return line
 
-    def _translate_spline_curve_by_vector(self, desloc_x: float, desloc_y: float
+    def _translate_spline_curve_by_vector(self, desloc_x: float, desloc_y: float, desloc_z: float
                                           ) -> BSplineCurve:
         '''Translate internal object when is a wireframe and return copy'''
         if isinstance(self._object, Point3D):
@@ -585,7 +640,8 @@ class Transformator:
         new_points = translate_points(
             points=self._object.points,
             desloc_x=desloc_x,
-            desloc_y=desloc_y
+            desloc_y=desloc_y,
+            desloc_z=desloc_z
         )
 
         new_spline = self._intern_copy()
@@ -593,8 +649,8 @@ class Transformator:
 
         return new_spline
 
-    def _translate_wireframe(self, desloc_x: float, desloc_y: float
-                             ) -> Wireframe:
+    def _translate_wireframe_and_obj3d(self, desloc_x: float, desloc_y: float, desloc_z: float
+                                       ) -> Wireframe:
         '''Translate internal object when is a wireframe and return copy'''
         if isinstance(self._object, Point3D):
             error = 'Trying to operate as line/wireframe over point'
@@ -603,18 +659,16 @@ class Transformator:
         new_points = translate_points(
             points=self._object.points,
             desloc_x=desloc_x,
-            desloc_y=desloc_y
+            desloc_y=desloc_y,
+            desloc_z=desloc_z
         )
 
-        wireframe = Wireframe(
-            name=self._object.name,
-            points=new_points
-        )
-        wireframe.color = self._object.color
+        wireframe = self._intern_copy()
+        wireframe.points = new_points
 
         return wireframe
 
-    def scale(self, scale_x: float, scale_y: float
+    def scale(self, scale_x: float, scale_y: float, scale_z: float
               ) -> Union[Point3D, Line, Wireframe, BezierCurve]:
         '''Scale internal object by deslocation values'''
         if isinstance(self._object, Point3D):
@@ -622,17 +676,17 @@ class Transformator:
             return self._object
 
         if isinstance(self._object, Line):
-            return self._scale_line(scale_x, scale_y)
+            return self._scale_line(scale_x, scale_y, scale_z)
 
         if isinstance(self._object, BezierCurve):
-            return self._scale_bezier_curve(scale_x, scale_y)
+            return self._scale_bezier_curve(scale_x, scale_y, scale_z)
 
         if isinstance(self._object, BSplineCurve):
-            return self._scale_bspline_curve(scale_x, scale_y)
+            return self._scale_bspline_curve(scale_x, scale_y, scale_z)
 
-        return self._scale_wireframe(scale_x, scale_y)
+        return self._scale_wireframe_and_obj3d(scale_x, scale_y, scale_z)
 
-    def _scale_line(self, scale_x: float, scale_y: float) -> Line:
+    def _scale_line(self, scale_x: float, scale_y: float, scale_z: float) -> Line:
         '''Scale internal when is a line and return copy'''
         if isinstance(self._object, Point3D):
             error = 'Trying to operate as line/wireframe over point'
@@ -642,7 +696,8 @@ class Transformator:
             points=self._object.points,
             point=self.get_object_geometric_center(),
             scale_x=scale_x,
-            scale_y=scale_y
+            scale_y=scale_y,
+            scale_z=scale_z
         )
 
         line = self._intern_copy()
@@ -653,7 +708,7 @@ class Transformator:
         line.p2 = new_points[1]
         return line
 
-    def _scale_bezier_curve(self, scale_x: float, scale_y: float) -> BezierCurve:
+    def _scale_bezier_curve(self, scale_x: float, scale_y: float, scale_z: float) -> BezierCurve:
         '''Scale internal when is a wireframe and return copy'''
         new_setups = []
         for setup in self._object.curves:
@@ -662,7 +717,8 @@ class Transformator:
                 points=points,
                 point=self.get_object_geometric_center(),
                 scale_x=scale_x,
-                scale_y=scale_y)
+                scale_y=scale_y,
+                scale_z=scale_z)
             new_setups.append(BezierCurveSetup(
                 P1=new_points[0],
                 P2=new_points[1],
@@ -676,7 +732,7 @@ class Transformator:
 
         return new_curve
 
-    def _scale_bspline_curve(self, scale_x: float, scale_y: float) -> BSplineCurve:
+    def _scale_bspline_curve(self, scale_x: float, scale_y: float, scale_z: float) -> BSplineCurve:
         '''Scale internal when is a wireframe and return copy'''
         if isinstance(self._object, Point3D):
             error = 'Trying to operate as line/wireframe over point'
@@ -686,14 +742,15 @@ class Transformator:
             points=self._object.points,
             point=self.get_object_geometric_center(),
             scale_x=scale_x,
-            scale_y=scale_y
+            scale_y=scale_y,
+            scale_z=scale_z
         )
 
         new_spline = self._intern_copy()
         new_spline.points = new_points
         return new_spline
 
-    def _scale_wireframe(self, scale_x: float, scale_y: float) -> Wireframe:
+    def _scale_wireframe_and_obj3d(self, scale_x: float, scale_y: float, scale_z: float) -> Wireframe:
         '''Scale internal when is a wireframe and return copy'''
         if isinstance(self._object, Point3D):
             error = 'Trying to operate as line/wireframe over point'
@@ -703,7 +760,8 @@ class Transformator:
             points=self._object.points,
             point=self.get_object_geometric_center(),
             scale_x=scale_x,
-            scale_y=scale_y
+            scale_y=scale_y,
+            scale_z=scale_z
         )
 
         wireframe = self._intern_copy()
@@ -737,9 +795,10 @@ class Normalizer:
             transformation matrix'''
         return concat_transformation_matrixes([
             get_translation_matrix(-self._window_center.x,
-                                   -self._window_center.y),
-            get_rotation_matrix_from_degrees(self._vup_angle),
-            get_scaling_matrix(1/self._window_width, 1/self._window_height)
+                                   -self._window_center.y,
+                                   0),
+            get_rz_rotation_matrix_from_degrees(self._vup_angle),
+            get_scaling_matrix(1/self._window_width, 1/self._window_height, 1)
         ])
 
     def normalize_objects(self, objects: List[Union[Point3D, Line, Wireframe]]
@@ -762,7 +821,7 @@ class Normalizer:
             return self._normalize_line(obj)
 
         if isinstance(obj, Wireframe):
-            return self._normalize_wireframe(obj)
+            return self._normalize_wireframe_and_obj3d(obj)
 
         raise TypeError(f'Invaldi type for normalization: {obj}')
 
@@ -783,7 +842,7 @@ class Normalizer:
 
         return new_line
 
-    def _normalize_wireframe(self, wireframe: Wireframe) -> Wireframe:
+    def _normalize_wireframe_and_obj3d(self, wireframe: Wireframe) -> Wireframe:
         '''Apply normalization to wireframe'''
         points = transform(wireframe.points, self._normalization_matrix)
 
