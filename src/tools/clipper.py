@@ -29,6 +29,27 @@ def close_to_zero(num: float) -> bool:
     return isclose(num, 0, abs_tol=1e-6)
 
 
+def remove_items_in_between(lst: List, start, end) -> List:
+    '''Remove items between start and and from the list'''
+    start_index = lst.index(start)
+    end_index = lst.index(end)
+    list_len = len(lst)
+    # Collect items
+    i = start_index
+    items = []
+    while True:
+        items.append(lst[i])
+        if i == end_index:
+            break
+
+        i = (i+1) % list_len
+
+    for item in items:
+        lst.remove(item)
+
+    return lst
+
+
 class Clipper:
     '''Centralize clipping processess'''
 
@@ -199,30 +220,30 @@ class WeilerAthertonPolygonClipping:
         return nwf
 
     def insert_into_edges(self, edges: List[Tuple[Point3D, _Type]],
-                          point: Point3D, p_type: _Type
+                          new_pt: Tuple[Point3D, _Type]
                           ) -> List[Tuple[Point3D, _Type]]:
         '''Insert the point into edges list based on what edge
         line the point is from, considering a clockwise path'''
-
+        point = new_pt[0]
         if isclose(point.x, self.setup.xmax, abs_tol=1e-6):
             # Right edge
             index = edges.index((self.bot_right, _Type.ORIGINAL))
-            edges.insert(index, (point, p_type))
+            edges.insert(index, new_pt)
 
         elif isclose(point.x, self.setup.xmin, abs_tol=1e-6):
             # Left edge
             index = edges.index((self.top_left, _Type.ORIGINAL))
-            edges.insert(index, (point, p_type))
+            edges.insert(index, new_pt)
 
         elif isclose(point.y, self.setup.ymin, abs_tol=1e-6):
             # Bottom edge
             index = edges.index((self.bot_left, _Type.ORIGINAL))
-            edges.insert(index, (point, p_type))
+            edges.insert(index, new_pt)
 
         elif isclose(point.y, self.setup.ymax, abs_tol=1e-6):
             # Top edge
             index = edges.index((self.top_right, _Type.ORIGINAL))
-            edges.insert(index, (point, p_type))
+            edges.insert(index, new_pt)
 
         return edges
 
@@ -278,19 +299,23 @@ class WeilerAthertonPolygonClipping:
             clipped = lb_line_clipper.get_clipped()
             if clipped is not None:
                 if line.p2 != clipped.p2:
+                    # oposed = (clipped.p2, _Type.ENTERING)
+                    new_pt = (clipped.p2, _Type.EXITING)
+
                     index = subject.index((line.p1, _Type.ORIGINAL))
-                    subject.insert(index + 1, (clipped.p2, _Type.EXITING))
-                    edges = self.insert_into_edges(edges, clipped.p2,
-                                                   _Type.EXITING)
+                    subject.insert(index + 1, new_pt)
+                    edges = self.insert_into_edges(edges, new_pt)
 
                 if line.p1 != clipped.p1:
-                    index = subject.index((line.p1, _Type.ORIGINAL))
-                    subject.insert(index + 1, (clipped.p1, _Type.ENTERING))
-                    entries.append((clipped.p1, _Type.ENTERING))
-                    edges = self.insert_into_edges(edges, clipped.p1,
-                                                   _Type.ENTERING)
-        out = []
+                    new_pt = (clipped.p1, _Type.ENTERING)
+                    # oposed = (clipped.p1, _Type.EXITING)
 
+                    index = subject.index((line.p1, _Type.ORIGINAL))
+                    edges = self.insert_into_edges(edges, new_pt)
+                    subject.insert(index + 1, new_pt)
+                    entries.append(new_pt)
+
+        out = []
         edges = self.order_edges(edges)
 
         for point, t in entries:
@@ -319,6 +344,9 @@ class WeilerAthertonPolygonClipping:
                 index = (index + 1) % edges_len
 
             out.append(new_polygon_points)
+
+        # Varrer as listas de pontos em out, ver se tem dois pontos iguais,
+        # se tiver, apaga eles e tudo q estiver entre eles
 
         if len(out) == 0 and self.point_inside_window(subject[0][0]):
             return [self.copy_wireframe()]

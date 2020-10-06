@@ -1,6 +1,6 @@
 '''Transformations for objects'''
 from typing import List, Union
-from math import cos, sin, radians
+from math import cos, sin, radians, atan, degrees, asin, sqrt
 from statistics import mean
 from copy import deepcopy
 
@@ -55,8 +55,8 @@ def get_rz_rotation_matrix_from_degrees(angle: float) -> np.ndarray:
     rad_angle = radians(angle)
     return np.array(
         [
-            [cos(rad_angle), -sin(rad_angle), 0, 0],
-            [sin(rad_angle), cos(rad_angle), 0, 0],
+            [cos(rad_angle), sin(rad_angle), 0, 0],
+            [-sin(rad_angle), cos(rad_angle), 0, 0],
             [0, 0, 1, 0],
             [0, 0, 0, 1]
         ]
@@ -172,6 +172,76 @@ class Transformator:
             y=mean(map(lambda p: p.y, points)),
             z=mean(map(lambda p: p.z, points))
         )
+
+    def rotate_by_degrees_arbitrary_axis(self, p: Point3D, a: Point3D,
+                                         angle: float):
+        '''Rotate points of a object over arbitrary angle'''
+        a_moved = transform([a], get_translation_matrix(-p.x, -p.y, -p.z))[0]
+        print('A transposto:', a_moved)
+
+        if a_moved.x != 0:
+            angle_of_a_with_x = degrees(atan(a_moved.z/a_moved.x))
+        else:
+            angle_of_a_with_x = degrees(atan(a_moved.z/a_moved.y))
+
+        obj_to_xy_matrix = get_rx_rotation_matrix_from_degrees(
+            -angle_of_a_with_x)
+        a_in_xy = transform([a_moved], obj_to_xy_matrix)[0]
+
+        angle_of_a_in_xy_with_y = degrees(atan(a_in_xy.x/a_in_xy.y))
+
+        matrix = concat_transformation_matrixes([
+            get_translation_matrix(-p.x, -p.y, -p.z),
+            get_rx_rotation_matrix_from_degrees(-angle_of_a_with_x),
+            get_rz_rotation_matrix_from_degrees(angle_of_a_in_xy_with_y),
+            get_ry_rotation_matrix_from_degrees(angle),
+            get_rz_rotation_matrix_from_degrees(-angle_of_a_in_xy_with_y),
+            get_rx_rotation_matrix_from_degrees(angle_of_a_with_x),
+            get_translation_matrix(p.x, p.y, p.z)
+        ])
+
+        if isinstance(self._object, Point3D):
+            new_point = transform([self._object], matrix)[0]
+            intern = self._intern_copy()
+            intern.x = new_point.x
+            intern.y = new_point.y
+            intern.z = new_point.z
+
+            return intern
+
+        if isinstance(self._object, Line):
+            new_points = transform(self._object.points(), matrix)
+            new_line = self._intern_copy()
+            new_line.p1 = new_points[0]
+            new_line.p2 = new_points[1]
+
+            return new_line
+
+        if isinstance(self._object, Wireframe) \
+                or isinstance(self._object, Object3D) \
+                or isinstance(self._object, BSplineCurve):
+            new_points = transform(self._object.points, matrix)
+            new_obj = self._intern_copy()
+            new_obj.points = new_points
+
+            return new_obj
+
+        if isinstance(self._object, BezierCurve):
+            new_setups = []
+            for setup in self._object.curves:
+                points = [setup.P1, setup.P2, setup.P3, setup.P4]
+                new_points = transform(points, matrix)
+                new_setups.append(BezierCurveSetup(
+                    P1=new_points[0],
+                    P2=new_points[1],
+                    P3=new_points[2],
+                    P4=new_points[3]
+                ))
+
+            new_curve = self._intern_copy
+            new_curve.curves = new_setups
+
+            return new_curve
 
     def rotate_by_degrees_geometric_center(self, angle: float,
                                            rotation_axis: str
@@ -296,7 +366,8 @@ class Transformator:
         return new_obj
 
     def rotate_by_degrees_origin(self, angle: float,
-                                 rotation_axis: str) -> Union[Point3D, Line, Wireframe, BezierCurve]:
+                                 rotation_axis: str
+                                 ) -> Union[Point3D, Line, Wireframe, BezierCurve]:
         '''Rotate intern object in by angle an input angle
 
         Parameters
@@ -750,7 +821,8 @@ class Transformator:
         new_spline.points = new_points
         return new_spline
 
-    def _scale_wireframe_and_obj3d(self, scale_x: float, scale_y: float, scale_z: float) -> Wireframe:
+    def _scale_wireframe_and_obj3d(self, scale_x: float, scale_y: float,
+                                   scale_z: float) -> Wireframe:
         '''Scale internal when is a wireframe and return copy'''
         if isinstance(self._object, Point3D):
             error = 'Trying to operate as line/wireframe over point'

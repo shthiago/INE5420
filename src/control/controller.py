@@ -77,12 +77,12 @@ class Controller:
                     Point3D('7', x=0, y=100, z=100),
                 ],
                 faces=[
-                    # [0, 1, 2, 3],
+                    [0, 1, 2, 3],
                     [0, 1, 5, 4],
                     [0, 4, 7, 3],
                     [3, 2, 6, 7],
                     [1, 5, 6, 2],
-                    # [4, 5, 6, 7]
+                    [4, 5, 6, 7]
                 ]
             )
         )
@@ -736,7 +736,22 @@ class Controller:
         angle = float(tab.degrees_input.text())
         axis = tab.get_axis()
 
-        if tab.over_obj_center_radio_btn.isChecked():
+        if axis == 'arbitrary':
+            p = Point3D(
+                name='__p',
+                x=int(tab.p_x_input.text()),
+                y=int(tab.p_y_input.text()),
+                z=int(tab.p_z_input.text()))
+            a = Point3D(
+                name='__a',
+                x=int(tab.a_x_input.text()),
+                y=int(tab.a_y_input.text()),
+                z=int(tab.a_z_input.text()))
+
+            new_obj = transformator.rotate_by_degrees_arbitrary_axis(
+                p, a, angle)
+
+        elif tab.over_obj_center_radio_btn.isChecked():
             new_obj = transformator.rotate_by_degrees_geometric_center(
                 angle, axis)
 

@@ -60,6 +60,9 @@ class Point3D(BaseNamedColoredObject):
         return (self.x, self.y, self.z)
 
     def __eq__(self, other) -> bool:
+        if not isinstance(other, Point3D):
+            return False
+
         return all([isclose(other.x, self.x, abs_tol=1e-4),
                     isclose(other.y, self.y, abs_tol=1e-4)])
 

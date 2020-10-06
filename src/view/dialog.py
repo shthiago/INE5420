@@ -901,9 +901,14 @@ class RotateTab(QtWidgets.QWidget):
         '''Reset dialog values'''
         self.x_input.clear()
         self.y_input.clear()
-        # self.z_input.clear()
+        self.z_input.clear()
         self.degrees_input.clear()
-
+        self.p_x_input.clear()
+        self.p_y_input.clear()
+        self.p_z_input.clear()
+        self.a_x_input.clear()
+        self.a_y_input.clear()
+        self.a_z_input.clear()
 
 class RescaleTab(QtWidgets.QWidget):
     """
