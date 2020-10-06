@@ -11,7 +11,7 @@ from loguru import logger
 
 from src.control.transform import Transformator, Normalizer
 from src.model import new_object_factory
-from src.model.objects import Point3D, Line, Wireframe, BezierCurve, BSplineCurve
+from src.model.objects import Point3D, Line, Wireframe, BezierCurve, BSplineCurve, Object3D
 from src.model.objects import ViewportObjectRepresentation, BezierCurveSetup
 from src.tools.wavefront_reader import read_wavefront
 from src.tools.clipper import Clipper, ClipperSetup
@@ -63,7 +63,7 @@ class Controller:
         self.xvp_max = 590  # it was 600, changed for clipping proof
         self.yvp_max = 590  # it was 600, changed for clipping proof
 
-        #self.add_object_to_list(
+        # self.add_object_to_list(
         #    BSplineCurve('Spline',
         #                 control_points=[
         #                     Point3D('_', x=0, y=0, z=0),
@@ -73,7 +73,43 @@ class Controller:
         #                     Point3D('_', x=-400, y=0, z=0),
         #                     Point3D('_', x=-500, y=500, z=0),
         #                 ])
-        #)
+        # )
+
+        self.add_object_to_list(
+            Object3D(
+                name='Objeto3D',
+                points=[
+                    Point3D('0', x=0, y=0, z=0),
+                    Point3D('1', x=100, y=0, z=0),
+                    Point3D('2', x=100, y=100, z=0),
+                    Point3D('3', x=0, y=100, z=0),
+                    Point3D('4', x=0, y=0, z=100),
+                    Point3D('5', x=100, y=0, z=100),
+                    Point3D('6', x=100, y=100, z=100),
+                    Point3D('7', x=0, y=100, z=100),
+                ],
+                faces=[
+                    [0, 1, 2, 3],
+                    [0, 1, 5, 4],
+                    [0, 4, 7, 3],
+                    [3, 2, 6, 7],
+                    [1, 5, 6, 2],
+                    [4, 5, 6, 7]
+                ]
+            )
+        )
+
+        # self.add_object_to_list(
+        #     BSplineCurve('Spline',
+        #                  points=[
+        #                      Point3D('_', x=0, y=0, z=0),
+        #                      Point3D('_', x=-100, y=200, z=0),
+        #                      Point3D('_', x=-200, y=0, z=0),
+        #                      Point3D('_', x=-300, y=-200, z=0),
+        #                      Point3D('_', x=-400, y=0, z=0),
+        #                      Point3D('_', x=-500, y=500, z=0),
+        #                  ])
+        # )
 
         self._process_viewport()
 
@@ -94,22 +130,22 @@ class Controller:
         Add any needed handler to add objects dialog
         """
         # If "Ok" pressed, process data to add object
-        self.add_object_dialog.buttonBox.accepted.connect(
+        self.add_object_dialog.button_box.accepted.connect(
             self._dialog_accepted_handler)
 
         # If "Cancel" pressed, just closes the dialog
-        self.add_object_dialog.buttonBox.rejected.connect(
+        self.add_object_dialog.button_box.rejected.connect(
             self._dialog_rejected_handler)
 
     def _add_transform_dialog_handlers(self):
         """
         Add any needed handler to input transformations parameters dialog
         """
-        self.transform_dialog.buttonBox.accepted.connect(
+        self.transform_dialog.button_box.accepted.connect(
             self.apply_transformation_handler
         )
 
-        self.transform_dialog.buttonBox.rejected.connect(
+        self.transform_dialog.button_box.rejected.connect(
             self.reject_transformation_handler
         )
 
@@ -226,7 +262,7 @@ class Controller:
 
     def _import_from_file_handler(self):
         '''Get the .obj filepath and call the proper load functions'''
-        
+
         file = QFileDialog.getOpenFileName()[0]
         if file != '':
             self._import_from_file(file)
@@ -546,7 +582,12 @@ class Controller:
                 Line('gy',
                      Point3D('_gy1', -10000, 0, 0),
                      Point3D('_gy2', 10000, 0, 0),
-                     thickness=1)]
+                     thickness=1),
+                Line('gz',
+                     Point3D('_gz1', 0, 0, -10000),
+                     Point3D('_gz2', 0, 0, 10000),
+                     thickness=1),
+                ]
 
         normalized_display_file = self.get_normalized_display_file(grid=grid)
 
@@ -572,7 +613,6 @@ class Controller:
                 pts = []
                 for p in obj.points:
                     pts.append(self.viewpoert_transform_point(p))
-
                 transformed_groups_of_points.append(
                     ViewportObjectRepresentation(name=obj.name,
                                                  points=pts,
@@ -605,8 +645,13 @@ class Controller:
         curve_step = 0.01
         for obj in self.display_file:
             if isinstance(obj, BezierCurve) or isinstance(obj, BSplineCurve):
-                # Switch the curve by its points
+                # Switch the curve by its lines
                 objects_list.extend(obj.calculate_lines(curve_step))
+
+            elif isinstance(obj, Object3D):
+                # Switch object 3d by its wireframes
+                objects_list.extend(obj.get_wireframes())
+
             else:
                 objects_list.append(obj)
 
@@ -689,13 +734,13 @@ class Controller:
 
         x = float(tab.x_input.text())
         y = float(tab.y_input.text())
-        # z = float(tab.z_input.text())
+        z = float(tab.z_input.text())
         option = tab.option_label.text()
 
         if option == "Vector":
-            new_obj = transformator.translate_by_vector(x, y)
+            new_obj = transformator.translate_by_vector(x, y, z)
         else:  # option == "Point"
-            new_obj = transformator.translate_to_point(x, y)
+            new_obj = transformator.translate_to_point(x, y, z)
 
         # inserting new obj in the same index as the transformed obj
         index = self.display_file.index(obj)
@@ -706,19 +751,36 @@ class Controller:
         '''Apply rotate transformation'''
         transformator = Transformator(obj)
         angle = float(tab.degrees_input.text())
+        axis = tab.get_axis()
 
-        if tab.over_obj_center_radio_btn.isChecked():
-            new_obj = transformator.rotate_by_degrees_geometric_center(angle)
+        if axis == 'arbitrary':
+            p = Point3D(
+                name='__p',
+                x=int(tab.p_x_input.text()),
+                y=int(tab.p_y_input.text()),
+                z=int(tab.p_z_input.text()))
+            a = Point3D(
+                name='__a',
+                x=int(tab.a_x_input.text()),
+                y=int(tab.a_y_input.text()),
+                z=int(tab.a_z_input.text()))
+
+            new_obj = transformator.rotate_by_degrees_arbitrary_axis(
+                p, a, angle)
+
+        elif tab.over_obj_center_radio_btn.isChecked():
+            new_obj = transformator.rotate_by_degrees_geometric_center(
+                angle, axis)
 
         elif tab.over_world_center_radio_btn.isChecked():
-            new_obj = transformator.rotate_by_degrees_origin(angle)
+            new_obj = transformator.rotate_by_degrees_origin(angle, axis)
 
         else:  # tab.over_point_radio_btn.isChecked()
             x = float(tab.x_input.text())
             y = float(tab.y_input.text())
             z = 0  # float(tab.z_input.text())
             new_obj = transformator.rotate_by_degrees_point(
-                angle, Point3D('rotationPoint', x, y, z))
+                angle, Point3D('rotationPoint', x, y, z), axis)
 
         # inserting new obj in the same index as the transformed obj
         index = self.display_file.index(obj)
@@ -729,7 +791,7 @@ class Controller:
         '''Apply scaling transformation'''
         scale_factor = float(tab.factor_input.text())
         transformator = Transformator(obj)
-        new_obj = transformator.scale(scale_factor, scale_factor)
+        new_obj = transformator.scale(*3*[scale_factor])
 
         # inserting new obj in the same index as the transformed obj
         index = self.display_file.index(obj)

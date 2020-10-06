@@ -12,10 +12,10 @@ class NewObjectDialog(QtWidgets.QDialog):
     def initUi(self):
         self.resize(400, 300)
         self.setWindowTitle("Create object")
-        self.buttonBox = QtWidgets.QDialogButtonBox(self)
-        self.buttonBox.setGeometry(QtCore.QRect(130, 260, 171, 32))
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(
+        self.button_box = QtWidgets.QDialogButtonBox(self)
+        self.button_box.setGeometry(QtCore.QRect(130, 260, 171, 32))
+        self.button_box.setOrientation(QtCore.Qt.Horizontal)
+        self.button_box.setStandardButtons(
             QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
 
         self.name_lbl = QtWidgets.QLabel(self)
@@ -613,10 +613,10 @@ class TransformationDialog(QtWidgets.QDialog):
         '''Initialize elements for dialog'''
         self.resize(400, 300)
         self.setWindowTitle("Apply transformation")
-        self.buttonBox = QtWidgets.QDialogButtonBox(self)
-        self.buttonBox.setGeometry(QtCore.QRect(130, 260, 171, 32))
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(
+        self.button_box = QtWidgets.QDialogButtonBox(self)
+        self.button_box.setGeometry(QtCore.QRect(130, 260, 171, 32))
+        self.button_box.setOrientation(QtCore.Qt.Horizontal)
+        self.button_box.setStandardButtons(
             QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
 
         self.name_lbl = QtWidgets.QLabel(self)
@@ -656,6 +656,12 @@ class TransformationDialog(QtWidgets.QDialog):
         active_tab_name = self.tab_panel.tabText(active_index)
 
         return active_tab_name, active_tab
+
+    def get_axis(self):
+        """
+        Get selected axis to rotate
+        """
+        return self.rotate_tab.get_axis()
 
     def reset_values(self):
         '''Reset dialog values'''
@@ -712,18 +718,18 @@ class MoveTab(QtWidgets.QWidget):
         self.y_input.setValidator(self.numeric_validator)
 
         # For 3D upgrade
-        # self.z_lbl = QtWidgets.QLabel('Z', self.point_input_panel)
-        # self.z_lbl.setGeometry(QtCore.QRect(125, 0, 20, 20))
+        self.z_lbl = QtWidgets.QLabel('Z', self.point_input_panel)
+        self.z_lbl.setGeometry(QtCore.QRect(125, 0, 20, 20))
 
-        # self.z_input = QtWidgets.QLineEdit(self.point_input_panel)
-        # self.z_input.setGeometry(QtCore.QRect(110, 20, 40, 20))
-        # self.z_input.setValidator(self.numeric_validator)
+        self.z_input = QtWidgets.QLineEdit(self.point_input_panel)
+        self.z_input.setGeometry(QtCore.QRect(110, 20, 40, 20))
+        self.z_input.setValidator(self.numeric_validator)
 
     def reset_values(self):
         '''Reset dialog values'''
         self.x_input.clear()
         self.y_input.clear()
-        # self.z_input.clear()
+        self.z_input.clear()
 
 
 class RotateTab(QtWidgets.QWidget):
@@ -781,12 +787,12 @@ class RotateTab(QtWidgets.QWidget):
         self.y_input.setValidator(self.numeric_validator)
 
         # For 3D upgrade
-        # self.z_lbl = QtWidgets.QLabel('Z', self.point_to_rotate_panel)
-        # self.z_lbl.setGeometry(QtCore.QRect(125, 0, 20, 20))
+        self.z_lbl = QtWidgets.QLabel('Z', self.point_to_rotate_panel)
+        self.z_lbl.setGeometry(QtCore.QRect(125, 0, 20, 20))
 
-        # self.z_input = QtWidgets.QLineEdit(self.point_to_rotate_panel)
-        # self.z_input.setGeometry(QtCore.QRect(110, 20, 40, 20))
-        # self.z_input.setValidator(self.numeric_validator)
+        self.z_input = QtWidgets.QLineEdit(self.point_to_rotate_panel)
+        self.z_input.setGeometry(QtCore.QRect(110, 20, 40, 20))
+        self.z_input.setValidator(self.numeric_validator)
 
         # Link this panel to rotation around point radio buton
         self.over_point_radio_btn.toggled.connect(
@@ -796,26 +802,113 @@ class RotateTab(QtWidgets.QWidget):
         )
 
         # Degrees input
-        self.degrees_label = QtWidgets.QLabel('Degrees:', self)
+        self.degrees_label = QtWidgets.QLabel('Degrees', self)
         self.degrees_label.setGeometry(
-            QtCore.QRect(200, 60, 100, 20))
+            QtCore.QRect(160, 0, 100, 20))
 
         self.degree_unit_label = QtWidgets.QLabel('º', self)
         self.degree_unit_label.setGeometry(
-            QtCore.QRect(240, 80, 100, 20))
+            QtCore.QRect(200, 20, 100, 20))
 
         self.degrees_input = QtWidgets.QLineEdit(self)
         self.degrees_input.setGeometry(
-            QtCore.QRect(200, 80, 40, 20))
+            QtCore.QRect(160, 20, 40, 20))
         self.degrees_input.setValidator(self.degree_validator)
+
+        self.axis_panel = QtWidgets.QWidget(self)
+        self.axis_panel.setGeometry(
+            QtCore.QRect(200, 10, 180, 100))
+
+        self.axis_label = QtWidgets.QLabel('Ref. axis', self.axis_panel)
+        self.axis_label.setGeometry(QtCore.QRect(30, 0, 100, 20))
+
+        self.x_axis = QtWidgets.QRadioButton(
+            'X', self.axis_panel)
+        self.x_axis.setGeometry(
+            QtCore.QRect(35, 25, 50, 20))
+
+        self.y_axis = QtWidgets.QRadioButton(
+            'Y', self.axis_panel)
+        self.y_axis.setGeometry(
+            QtCore.QRect(80, 25, 50, 20))
+
+        self.z_axis = QtWidgets.QRadioButton(
+            'Z', self.axis_panel)
+        self.z_axis.setGeometry(
+            QtCore.QRect(115, 25, 50, 20))
+        self.z_axis.setChecked(True)  # default
+
+        self.arbitrary_axis_radio = QtWidgets.QRadioButton(
+            'Arbitrary', self.axis_panel)
+        self.arbitrary_axis_radio.setGeometry(
+            QtCore.QRect(35, 50, 100, 20))
+
+        self.arbitrary_axis_pane = QtWidgets.QWidget(self)
+        self.arbitrary_axis_pane.setGeometry(
+            QtCore.QRect(190, 85, 170, 100))
+        self.arbitrary_axis_pane.setVisible(False)
+        self.arbitrary_axis_radio.toggled.connect(
+            lambda: self.arbitrary_axis_pane.setVisible(
+                not self.arbitrary_axis_pane.isVisible()
+            )
+        )
+
+        x_arbitrary_label = QtWidgets.QLabel('X', self.arbitrary_axis_pane)
+        x_arbitrary_label.setGeometry(QtCore.QRect(30, 0, 16, 19))
+        y_arbitrary_label = QtWidgets.QLabel('Y', self.arbitrary_axis_pane)
+        y_arbitrary_label.setGeometry(QtCore.QRect(80, 0, 16, 19))
+        z_arbitrary_label = QtWidgets.QLabel('Z', self.arbitrary_axis_pane)
+        z_arbitrary_label.setGeometry(QtCore.QRect(130, 0, 16, 19))
+
+        p_arbitrary_label = QtWidgets.QLabel('P', self.arbitrary_axis_pane)
+        p_arbitrary_label.setGeometry(QtCore.QRect(0, 20, 16, 19))
+
+        a_arbitrary_label = QtWidgets.QLabel('A', self.arbitrary_axis_pane)
+        a_arbitrary_label.setGeometry(QtCore.QRect(0, 50, 16, 19))
+
+        self.p_x_input = QtWidgets.QLineEdit(self.arbitrary_axis_pane)
+        self.p_x_input.setGeometry(QtCore.QRect(20, 20, 41, 27))
+        self.p_x_input.setValidator(self.numeric_validator)
+        self.p_y_input = QtWidgets.QLineEdit(self.arbitrary_axis_pane)
+        self.p_y_input.setGeometry(QtCore.QRect(70, 20, 41, 27))
+        self.p_y_input.setValidator(self.numeric_validator)
+        self.p_z_input = QtWidgets.QLineEdit(self.arbitrary_axis_pane)
+        self.p_z_input.setGeometry(QtCore.QRect(120, 20, 41, 27))
+        self.p_z_input.setValidator(self.numeric_validator)
+        self.a_x_input = QtWidgets.QLineEdit(self.arbitrary_axis_pane)
+        self.a_x_input.setGeometry(QtCore.QRect(20, 50, 41, 27))
+        self.a_x_input.setValidator(self.numeric_validator)
+        self.a_y_input = QtWidgets.QLineEdit(self.arbitrary_axis_pane)
+        self.a_y_input.setGeometry(QtCore.QRect(70, 50, 41, 27))
+        self.a_y_input.setValidator(self.numeric_validator)
+        self.a_z_input = QtWidgets.QLineEdit(self.arbitrary_axis_pane)
+        self.a_z_input.setGeometry(QtCore.QRect(120, 50, 41, 27))
+        self.a_z_input.setValidator(self.numeric_validator)
+
+    def get_axis(self):
+        '''Return label indicating what axis is selected'''
+        if self.x_axis.isChecked():
+            return 'x'
+        if self.y_axis.isChecked():
+            return 'y'
+        if self.z_axis.isChecked():
+            return 'z'
+
+        else:
+            return 'arbitrary'
 
     def reset_values(self):
         '''Reset dialog values'''
         self.x_input.clear()
         self.y_input.clear()
-        # self.z_input.clear()
+        self.z_input.clear()
         self.degrees_input.clear()
-
+        self.p_x_input.clear()
+        self.p_y_input.clear()
+        self.p_z_input.clear()
+        self.a_x_input.clear()
+        self.a_y_input.clear()
+        self.a_z_input.clear()
 
 class RescaleTab(QtWidgets.QWidget):
     """
