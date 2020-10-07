@@ -49,6 +49,10 @@ class NewObjectDialog(QtWidgets.QDialog):
         self.bspline_tab = BSplineTab()
         self.tab_panel.addTab(self.bspline_tab, "BSpline")
 
+        # Add 3D object
+        self._3dobject_tab = _3dObjectTab()
+        self.tab_panel.addTab(self._3dobject_tab, "3D Object")
+
         self.tab_panel.setCurrentIndex(0)
 
     def reset_values(self):
@@ -72,6 +76,9 @@ class NewObjectDialog(QtWidgets.QDialog):
 
         # Reset input for bspline
         self.bspline_tab.reset_values()
+
+        # Reset input for 3d objecto
+        self._3dobject_tab.reset_values()
 
     def active_tab(self):
         """
@@ -516,6 +523,147 @@ class CurveTab(QtWidgets.QWidget):
         self.points_model.clear()
         self.curves_list.clear()
 
+class _3dObjectTab(QtWidgets.QWidget):
+    """
+    Tab for holding buttons and inputs for creating a point
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.points_list_3d = []
+        self.faces_list_3d=[]
+
+        self.numeric_validator = QtGui.QIntValidator(-10000, 10000)
+
+        self.points_view_3d = QtWidgets.QListView(self)
+        self.points_view_3d.setGeometry(QtCore.QRect(80, 10, 100, 150))
+
+        self.points_model_3d = QtGui.QStandardItemModel()
+        self.points_view_3d.setModel(self.points_model_3d)
+
+        self.x_lbl_pt_3d = QtWidgets.QLabel(self)
+        self.x_lbl_pt_3d.setGeometry(QtCore.QRect(10, 10, 21, 16))
+        self.x_lbl_pt_3d.setText("X")
+
+        self.y_lbl_pt_3d = QtWidgets.QLabel(self)
+        self.y_lbl_pt_3d.setGeometry(QtCore.QRect(10, 50, 21, 16))
+        self.y_lbl_pt_3d.setText("Y")
+
+        self.z_lbl_pt_3d = QtWidgets.QLabel(self)
+        self.z_lbl_pt_3d.setGeometry(QtCore.QRect(10, 90, 21, 16))
+        self.z_lbl_pt_3d.setText("Z")
+
+        self.x_coord_pt_input_3d = QtWidgets.QLineEdit(self)
+        self.x_coord_pt_input_3d.setGeometry(QtCore.QRect(30, 10, 41, 23))
+        self.x_coord_pt_input_3d.setValidator(self.numeric_validator)
+
+        self.y_coord_pt_input_3d = QtWidgets.QLineEdit(self)
+        self.y_coord_pt_input_3d.setGeometry(QtCore.QRect(30, 50, 41, 23))
+        self.y_coord_pt_input_3d.setValidator(self.numeric_validator)
+
+        self.z_coord_pt_input_3d = QtWidgets.QLineEdit(self)
+        self.z_coord_pt_input_3d.setGeometry(QtCore.QRect(30, 90, 41, 23))
+        self.z_coord_pt_input_3d.setValidator(self.numeric_validator)
+
+        self.faces_lbl_3d = QtWidgets.QLabel(self)
+        self.faces_lbl_3d.setGeometry(QtCore.QRect(190, 10, 200, 32))
+        self.faces_lbl_3d.setText("Faces (separate \n# with ,)")
+
+        self.faces_input_3d = QtWidgets.QLineEdit(self)
+        self.faces_input_3d.setGeometry(QtCore.QRect(190, 50, 41, 23))
+
+        self.add_face_btn_3d = QtWidgets.QPushButton(self)
+        self.add_face_btn_3d.setGeometry(QtCore.QRect(190, 90, 60, 40))
+        self.add_face_btn_3d.setText('Add face')
+
+        self.add_face_btn_3d.clicked.connect(self.__add_input_faces_to_list)
+
+        self.faces_view_3d = QtWidgets.QListView(self)
+        self.faces_view_3d.setGeometry(QtCore.QRect(260, 52, 80, 100))
+
+        self.faces_model_3d = QtGui.QStandardItemModel()
+        self.faces_view_3d.setModel(self.faces_model_3d)
+
+        self.add_point_btn_3d = QtWidgets.QPushButton(self)
+        self.add_point_btn_3d.setGeometry(QtCore.QRect(10, 130, 60, 40))
+        self.add_point_btn_3d.setText('Add point')
+
+        self.add_point_btn_3d.clicked.connect(self.__add_input_values_to_list)
+
+    def __add_input_values_to_list(self):
+
+        try:
+            x = int(self.x_coord_pt_input_3d.text())
+            y = int(self.y_coord_pt_input_3d.text())
+            z = int(self.z_coord_pt_input_3d.text())
+        except ValueError as e:
+            QtWidgets.QMessageBox.information(
+                self,
+                'Error while creating point',
+                str(e),
+                QtWidgets.QMessageBox.Ok
+            )
+            return
+
+        self.reset_point_values
+        self.points_list_3d.append((x, y, z))
+        item = QtGui.QStandardItem(f'[{len(self.points_list_3d)}] = ({x}, {y}, {z})')
+        item.setEditable(False)
+        self.points_model_3d.appendRow(item)
+        self.x_coord_pt_input_3d.clear()
+        self.y_coord_pt_input_3d.clear()
+        self.z_coord_pt_input_3d.clear()
+
+    def __add_input_faces_to_list(self):
+
+        try:
+            points_on_face = []
+            faces = self.faces_input_3d.text()
+            for p in faces.split(','):
+                if len(p)>0:
+                    points_on_face.append(int(p)-1)
+        except ValueError as e:
+            QtWidgets.QMessageBox.information(
+                self,
+                'Error while inserting face',
+                str(e),
+                QtWidgets.QMessageBox.Ok
+            )
+            return
+
+        self.reset_face_values
+        self.faces_list_3d.append(points_on_face)
+        item = QtGui.QStandardItem(self.faces_input_3d.text())
+        item.setEditable(False)
+        self.faces_model_3d.appendRow(item)
+        self.faces_input_3d.clear()
+    
+    def reset_values(self):
+        """
+        Reset inputs to empty value
+        """
+
+        self.reset_point_values()
+        self.reset_face_values()
+
+
+    def reset_point_values(self):
+        """
+        Reset inputs to empty value
+        """
+
+        self.x_coord_pt_input_3d.clear()
+        self.y_coord_pt_input_3d.clear()
+        self.z_coord_pt_input_3d.clear()
+        self.points_model_3d.clear()
+        self.points_list_3d.clear()
+    
+    def reset_face_values(self):
+        """
+        Reset inputs to empty value
+        """
+
+        self.faces_input_3d.clear()
 
 class BSplineTab(QtWidgets.QDialog):
     def __init__(self):

@@ -75,29 +75,29 @@ class Controller:
         #                 ])
         # )
 
-        self.add_object_to_list(
-            Object3D(
-                name='Objeto3D',
-                points=[
-                    Point3D('0', x=0, y=0, z=0),
-                    Point3D('1', x=100, y=0, z=0),
-                    Point3D('2', x=100, y=100, z=0),
-                    Point3D('3', x=0, y=100, z=0),
-                    Point3D('4', x=0, y=0, z=100),
-                    Point3D('5', x=100, y=0, z=100),
-                    Point3D('6', x=100, y=100, z=100),
-                    Point3D('7', x=0, y=100, z=100),
-                ],
-                faces=[
-                    [0, 1, 2, 3],
-                    [0, 1, 5, 4],
-                    [0, 4, 7, 3],
-                    [3, 2, 6, 7],
-                    [1, 5, 6, 2],
-                    [4, 5, 6, 7]
-                ]
-            )
-        )
+        # self.add_object_to_list(
+        #     Object3D(
+        #         name='Objeto3D',
+        #         points=[
+        #             Point3D('0', x=0, y=0, z=0),
+        #             Point3D('1', x=100, y=0, z=0),
+        #             Point3D('2', x=100, y=100, z=0),
+        #             Point3D('3', x=0, y=100, z=0),
+        #             Point3D('4', x=0, y=0, z=100),
+        #             Point3D('5', x=100, y=0, z=100),
+        #             Point3D('6', x=100, y=100, z=100),
+        #             Point3D('7', x=0, y=100, z=100),
+        #         ],
+        #         faces=[
+        #             [0, 1, 2, 3],
+        #             [0, 1, 5, 4],
+        #             [0, 4, 7, 3],
+        #             [3, 2, 6, 7],
+        #             [1, 5, 6, 2],
+        #             [4, 5, 6, 7]
+        #         ]
+        #     )
+        # )
 
         # self.add_object_to_list(
         #     BSplineCurve('Spline',

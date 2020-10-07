@@ -3,8 +3,8 @@ from typing import List
 from PyQt5.QtWidgets import QWidget
 
 from src.model.objects import (Point3D, Line, Wireframe,
-                               BezierCurve, BezierCurveSetup, BSplineCurve)
-from src.view.dialog import LineTab, PointTab, CurveTab, WireframeTab, BSplineTab
+                               BezierCurve, BezierCurveSetup, BSplineCurve, Object3D)
+from src.view.dialog import LineTab, PointTab, CurveTab, WireframeTab, BSplineTab, _3dObjectTab
 
 
 def create_line(name: str, tab: LineTab) -> Line:
@@ -78,7 +78,21 @@ def create_bspline(obj_name: str, tab: BSplineTab) -> BSplineCurve:
         point = Point3D('Po' + str(i).zfill(3), x, y, z)
         points.append(point)
 
-    return BSplineCurve(name=obj_name, points=points)
+    return BSplineCurve(name=obj_name, control_points=points)
+
+def create_3dobject(obj_name: str, tab: _3dObjectTab) -> Object3D:
+    '''Take 3D object tab and create the 3d object'''
+    points = []
+    faces = []
+
+    for i, point in enumerate(tab.points_list_3d):
+        x, y, z = point
+        point = Point3D('Po' + str(i).zfill(3), x, y, z)
+        points.append(point)
+    
+    faces = tab.faces_list_3d
+
+    return Object3D(name=obj_name, points=points, faces=faces)
 
 
 def new_object_factory(obj_name: str, tab_name: str, tab: QWidget):
@@ -102,6 +116,8 @@ def new_object_factory(obj_name: str, tab_name: str, tab: QWidget):
             return status, create_curve(obj_name, tab)
         elif tab_name == 'BSpline':
             return status, create_bspline(obj_name, tab)
+        elif tab_name == '3D Object':
+            return status, create_3dobject(obj_name, tab)
 
         raise ValueError(f'Invalid tab name: {tab_name}')
 
