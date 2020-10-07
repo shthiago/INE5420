@@ -99,7 +99,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.degrees_lbl.setText("Dregrees")
 
         self.rotation_degrees_input = QtWidgets.QLineEdit(self.tools_menu_box)
-        self.rotation_degrees_input.setText('0')
+        self.rotation_degrees_input.setText('10')
         self.rotation_degrees_input.setGeometry(QtCore.QRect(75, 330, 41, 23))
         self.rotation_degrees_input.setValidator(QtGui.QIntValidator(0, 360))
 
@@ -115,17 +115,23 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rotate_right.setGeometry(QtCore.QRect(80, 360, 41, 23))
         self.rotate_right.setText(">")
 
-        # self.rotate_x_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        # self.rotate_x_btn.setGeometry(QtCore.QRect(20, 370, 31, 23))
-        # self.rotate_x_btn.setText("X")
+        self.axis_rotation_input = QtWidgets.QLineEdit(self.tools_menu_box)
+        self.axis_rotation_input.setText('10')
+        self.axis_rotation_input.setGeometry(QtCore.QRect(50, 415, 40, 20))
+        self.axis_rotation_input.setValidator(
+            QtGui.QIntValidator(-360, 360))
 
-        # self.rotate_y_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        # self.rotate_y_btn.setGeometry(QtCore.QRect(60, 370, 31, 23))
-        # self.rotate_y_btn.setText("Y")
+        self.rotate_x_btn = QtWidgets.QPushButton(self.tools_menu_box)
+        self.rotate_x_btn.setGeometry(QtCore.QRect(20, 440, 31, 23))
+        self.rotate_x_btn.setText("X")
 
-        # self.rotate_z_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        # self.rotate_z_btn.setGeometry(QtCore.QRect(100, 370, 31, 23))
-        # self.rotate_z_btn.setText("Z")
+        self.rotate_y_btn = QtWidgets.QPushButton(self.tools_menu_box)
+        self.rotate_y_btn.setGeometry(QtCore.QRect(60, 440, 31, 23))
+        self.rotate_y_btn.setText("Y")
+
+        self.rotate_z_btn = QtWidgets.QPushButton(self.tools_menu_box)
+        self.rotate_z_btn.setGeometry(QtCore.QRect(100, 440, 31, 23))
+        self.rotate_z_btn.setText("Z")
 
         # self.zoom_lbl = QtWidgets.QLabel(self.tools_menu_box)
         # self.zoom_lbl.setGeometry(QtCore.QRect(30, 400, 57, 15))

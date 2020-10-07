@@ -1,5 +1,5 @@
 '''Transformations for objects'''
-from typing import List, Union
+from typing import List, Union, Tuple
 from math import cos, sin, radians, atan, degrees, asin, sqrt
 from statistics import mean
 from copy import deepcopy
@@ -177,7 +177,6 @@ class Transformator:
                                          angle: float):
         '''Rotate points of a object over arbitrary angle'''
         a_moved = transform([a], get_translation_matrix(-p.x, -p.y, -p.z))[0]
-        print('A transposto:', a_moved)
 
         if a_moved.x != 0:
             angle_of_a_with_x = degrees(atan(a_moved.z/a_moved.x))
@@ -924,3 +923,80 @@ class Normalizer:
         new_wireframe.points = points
 
         return new_wireframe
+
+
+class ParalelProjection:
+    '''Class to make transformations over objects based on a VPN'''
+
+    def __init__(self, VPN: Tuple[Point3D, Point3D]):
+        self.VRP = VPN[0]
+        self.VPN_end = VPN[1]
+
+    def project(self, objects: Union[Point3D, Line, Wireframe, BezierCurve,
+                                     BSplineCurve, Object3D]
+                ) -> Union[Point3D, Line, Wireframe, BezierCurve,
+                           BSplineCurve, Object3D]:
+        '''Apply project transformation over lsit of objects'''
+        translate_to_origin = get_translation_matrix(
+            desloc_x=-self.VRP.x,
+            desloc_y=-self.VRP.y,
+            desloc_z=-self.VRP.z)
+
+        matrixes = [translate_to_origin]
+        vpn_translated = transform([self.VPN_end], translate_to_origin)[0]
+        if vpn_translated.y != 0:
+            angle_with_zx = degrees(atan(vpn_translated.y/vpn_translated.z))
+            matrixes.append(
+                get_rx_rotation_matrix_from_degrees(angle_with_zx))
+
+        if vpn_translated.x != 0:
+            angle_with_y = degrees(atan(vpn_translated.x/vpn_translated.z))
+            matrixes.append(
+                get_ry_rotation_matrix_from_degrees(-angle_with_y))
+
+        project_matrix = concat_transformation_matrixes(matrixes)
+        projected_objects = []
+        for obj in objects:
+            if isinstance(obj, Point3D):
+                new_point = transform([obj], project_matrix)[0]
+                new_point.color = obj.color
+                projected_objects.append(new_point)
+
+            elif isinstance(obj, Line):
+                new_points = transform(obj.points, project_matrix)
+                new_obj = deepcopy(obj)
+                new_obj.p1 = new_points[0]
+                new_obj.p2 = new_points[1]
+
+                projected_objects.append(new_obj)
+
+            elif isinstance(obj, Wireframe) or \
+                    isinstance(obj, Object3D) or \
+                    isinstance(obj, BSplineCurve):
+                new_points = transform(obj.points, project_matrix)
+                new_obj = deepcopy(obj)
+                new_obj.points = new_points
+
+                projected_objects.append(new_obj)
+
+            elif isinstance(obj, BezierCurve):
+                new_setups = []
+                for setup in obj.curves:
+                    points = [setup.P1, setup.P2, setup.P3, setup.P4]
+                    new_points = transform(points, project_matrix)
+                    new_setups.append(BezierCurveSetup(
+                        P1=new_points[0],
+                        P2=new_points[1],
+                        P3=new_points[2],
+                        P4=new_points[3]
+                    ))
+
+                new_curve = deepcopy(obj)
+                new_curve.curves = new_setups
+
+                projected_objects.append(new_curve)
+
+            else:
+                raise ValueError('Invalid object to project')
+
+        return projected_objects
