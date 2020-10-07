@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (QApplication, QMessageBox,
 from PyQt5.QtGui import QColor
 from loguru import logger
 
-from src.control.transform import Transformator, Normalizer
+from src.control.transform import Transformator, Normalizer, ParalelProjection
 from src.model import new_object_factory
 from src.model.objects import Point3D, Line, Wireframe, BezierCurve, BSplineCurve, Object3D
 from src.model.objects import ViewportObjectRepresentation, BezierCurveSetup
@@ -31,6 +31,10 @@ class Controller:
 
         # Angle between the Vup vector and the world Y axis
         self._vup_angle_degrees = 0
+
+        # Point to be the second extreme of the VPN
+        self._VPN_x_angle = 90
+        self._VPN_y_angle = 90
 
         # Init main interface
         self.app = QApplication(sys.argv)
@@ -112,6 +116,21 @@ class Controller:
         # )
 
         self._process_viewport()
+
+    @property
+    def VPN(self) -> Tuple[Point3D, Point3D]:
+        '''Return VRP and a Point3D'''
+        wcx = (self.window_xmax+self.window_xmin)/2
+        wcy = (self.window_ymax+self.window_ymin)/2
+        vpn = (Point3D('VPN_start',
+                       x=wcx,
+                       y=wcy,
+                       z=0),
+               Point3D('__vpn',
+                       x=cos(radians(self._VPN_x_angle)) + wcx,
+                       y=cos(radians(self._VPN_y_angle)) + wcy,
+                       z=1))
+        return vpn
 
     def run(self):
         """
@@ -244,14 +263,14 @@ class Controller:
         self.main_window.view_right_btn.clicked.connect(
             lambda: self._window_move_handler('right'))
 
-        # self.main_window.rotate_x_btn.clicked.connect(
-        #     lambda: )
+        self.main_window.rotate_x_btn.clicked.connect(
+            lambda: self._rotate_VPN('x'))
 
-        # self.main_window.rotate_y_btn.clicked.connect(
-        #     lambda: )
+        self.main_window.rotate_y_btn.clicked.connect(
+            lambda: self._rotate_VPN('y'))
 
-        # self.main_window.rotate_z_btn.clicked.connect(
-        #     lambda: )
+        self.main_window.rotate_z_btn.clicked.connect(
+            lambda: self._rotate_VPN('z'))
 
         self.main_window.color_change_action.triggered.connect(
             self._color_picker_dialog)
@@ -259,6 +278,16 @@ class Controller:
         self.main_window.open_transformation_dialog_action.triggered.connect(
             self._transformation_dialog
         )
+
+    def _rotate_VPN(self, axis: str):
+        '''Modify VPN'''
+        angle = int(self.main_window.axis_rotation_input.text())
+        if axis == 'x':
+            self._VPN_x_angle += angle
+        elif axis == 'y':
+            self._VPN_y_angle += angle
+
+        self._process_viewport()
 
     def _import_from_file_handler(self):
         '''Get the .obj filepath and call the proper load functions'''
@@ -271,7 +300,6 @@ class Controller:
     def _import_from_file(self, file: str):
         '''Call wavefront loaders'''
         geoms = read_wavefront(file)
-        print(geoms)
 
         for name, props in geoms.items():
             if not 'v' in props:
@@ -311,7 +339,6 @@ class Controller:
 
             elif len(points) > 2:
                 # Is a wireframe
-                print('chegou em criar a wireframe')
                 wireframe = Wireframe(name=name, points=points)
                 wireframe.color = color
                 self.add_object_to_list(wireframe)
@@ -575,21 +602,30 @@ class Controller:
         Function to create the window that will be drew into viewport
         """
 
-        grid = [Line('gx',
-                     Point3D('_gx1', 0, -10000, 0),
-                     Point3D('_gx2', 0, 10000, 0),
-                     thickness=1),
-                Line('gy',
-                     Point3D('_gy1', -10000, 0, 0),
-                     Point3D('_gy2', 10000, 0, 0),
-                     thickness=1),
-                Line('gz',
-                     Point3D('_gz1', 0, 0, -10000),
-                     Point3D('_gz2', 0, 0, 10000),
-                     thickness=1),
-                ]
+        gx = Line('gy',
+                  Point3D('_gy1', -10000, 0, 0),
+                  Point3D('_gy2', 10000, 0, 0),
+                  thickness=1)
+        gx.color = QColor(255, 0, 0)
+        gy = Line('gx',
+                  Point3D('_gx1', 0, -10000, 0),
+                  Point3D('_gx2', 0, 10000, 0),
+                  thickness=1)
+        gy.color = QColor(0, 255, 0)
+        gz = Line('gz',
+                  Point3D('_gz1', 0, 0, -10000),
+                  Point3D('_gz2', 0, 0, 10000),
+                  thickness=1)
+        gz.color = QColor(0, 0, 255)
 
-        normalized_display_file = self.get_normalized_display_file(grid=grid)
+        grid = [gx, gy, gz]
+
+        to_project_objects = grid + self.display_file
+        projector = ParalelProjection(self.VPN)
+        to_normalize_objects = projector.project(to_project_objects)
+
+        normalized_display_file = self.get_normalized_display_file(
+            to_normalize_objects)
 
         # Create clipper for normalized coordinates  system
         clipper_setup = ClipperSetup(xmax=1, xmin=-1, ymax=1, ymin=-1)
@@ -622,7 +658,7 @@ class Controller:
 
         self.main_window.viewport.draw_objects(transformed_groups_of_points)
 
-    def get_normalized_display_file(self, grid: List[Line]
+    def get_normalized_display_file(self, objects: List
                                     ) -> List[Union[Point3D, Line, Wireframe]]:
         '''Take internal Vup vector and rotate grid and internal list of objects'''
 
@@ -643,7 +679,7 @@ class Controller:
 
         objects_list = []
         curve_step = 0.01
-        for obj in self.display_file:
+        for obj in objects:
             if isinstance(obj, BezierCurve) or isinstance(obj, BSplineCurve):
                 # Switch the curve by its lines
                 objects_list.extend(obj.calculate_lines(curve_step))
@@ -655,7 +691,6 @@ class Controller:
             else:
                 objects_list.append(obj)
 
-        objects_list.extend(grid)
         return normalizer.normalize_objects(objects_list)
 
     def viewpoert_transform_point(self, point: Point3D):

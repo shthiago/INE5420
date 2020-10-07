@@ -232,7 +232,7 @@ class BezierCurve(BaseNamedColoredObject):
                 (setup.P3.x, setup.P3.y, setup.P3.z),
                 (setup.P4.x, setup.P4.y, setup.P4.z),
             ])
-        
+
         return tuples
 
     def _t_vec(self, t_value: float) -> np.ndarray:
@@ -249,7 +249,7 @@ class BezierCurve(BaseNamedColoredObject):
 
         values.reverse()
         return np.array(values)
-    
+
     def describe_export_with(self, points: List[Tuple[float, float, float]],
                              colors: List[QColor]) -> List[str]:
         '''Return lines that describe object in .obj file, using indexes
@@ -271,7 +271,7 @@ class BSplineCurve(BaseNamedColoredObject):
         super().__init__(name, QColor(0, 0, 0))
         self.thickness = thickness
 
-        self.control_points = control_points
+        self.points = control_points
         self.line_as_points = self.calculate_lines(0.1)
 
     def as_list_of_tuples(self) -> List[Tuple[int, int, int]]:
@@ -279,13 +279,12 @@ class BSplineCurve(BaseNamedColoredObject):
         tuples = []
         # if you are exporting all the lines
         #tuples.append((self.line_as_points[0].p1.x, self.line_as_points[0].p1.y, self.line_as_points[0].p1.z))
-        #for line in self.line_as_points:
+        # for line in self.line_as_points:
         #    tuples.append((line.p2.x, line.p2.y, line.p2.z))
 
         # if you are exporting the control points
-        for points in self.control_points:
+        for points in self.points:
             tuples.append((points.x, points.y, points.z))
-        
 
         return tuples
 
@@ -350,13 +349,13 @@ class BSplineCurve(BaseNamedColoredObject):
             lines.append(line)
 
         return lines
-    
+
     def describe_export_with(self, points: List[Tuple[float, float, float]],
                              colors: List[QColor]) -> List[str]:
         '''Return lines that describe object in .obj file, using indexes
         from points and names from colors'''
 
-        #index from all points
+        # index from all points
         indexes = [str(points.index(p) + 1) for p in self.as_list_of_tuples()]
 
         return ['# BSpline',
