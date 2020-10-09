@@ -134,8 +134,6 @@ def read_objfile(fname: str) -> dict:
                 obj[vertname] = tuple()
         del obj['f']
 
- 
-
     geoms = {obj['o']: obj for obj in obj_props if 'f' not in obj}
 
     return geoms
@@ -164,5 +162,5 @@ def read_wavefront(fname_obj: str) -> dict:
         for geom in geoms.values():
             if 'usemtl' in geom:
                 geom['material'] = materials[geom['usemtl']]
-                
+
     return geoms
