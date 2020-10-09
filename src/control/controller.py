@@ -32,10 +32,6 @@ class Controller:
         # Angle between the Vup vector and the world Y axis
         self._vup_angle_degrees = 0
 
-        # Point to be the second extreme of the VPN
-        self._VPN_x_angle = 90
-        self._VPN_y_angle = 90
-
         # Init main interface
         self.app = QApplication(sys.argv)
 
@@ -60,6 +56,10 @@ class Controller:
         self.window_ymin = -300
         self.window_xmax = 300
         self.window_ymax = 300
+        self._vrp_z = 1000
+
+        # Point to be the second extreme of the VPN
+        self._vpn_dir = Point3D('_vpn_direction', x=0, y=0, z=1)
 
         # Viewport values
         self.xvp_min = 10  # it was 0, changed for clipping proof
@@ -118,18 +118,24 @@ class Controller:
         self._process_viewport()
 
     @property
-    def VPN(self) -> Tuple[Point3D, Point3D]:
-        '''Return VRP and a Point3D'''
+    def VRP(self) -> Point3D:
+        '''Return window center'''
         wcx = (self.window_xmax+self.window_xmin)/2
         wcy = (self.window_ymax+self.window_ymin)/2
-        vpn = (Point3D('VPN_start',
+        return Point3D('VPN_start',
                        x=wcx,
                        y=wcy,
-                       z=0),
-               Point3D('__vpn',
-                       x=cos(radians(self._VPN_x_angle)) + wcx,
-                       y=cos(radians(self._VPN_y_angle)) + wcy,
-                       z=1))
+                       z=self._vrp_z)
+
+    @property
+    def VPN(self) -> Tuple[Point3D, Point3D]:
+        '''Return VRP and a Point3D'''
+        vrp = self.VRP
+        vpn = (vrp,
+               Point3D('_vpn_end',
+                       x=self._vpn_dir.x + vrp.x,
+                       y=self._vpn_dir.y + vrp.y,
+                       z=self._vpn_dir.z + vrp.z))
         return vpn
 
     def run(self):
@@ -282,10 +288,8 @@ class Controller:
     def _rotate_VPN(self, axis: str):
         '''Modify VPN'''
         angle = int(self.main_window.axis_rotation_input.text())
-        if axis == 'x':
-            self._VPN_x_angle += angle
-        elif axis == 'y':
-            self._VPN_y_angle += angle
+        trans = Transformator(self._vpn_dir)
+        self._vpn_dir = trans.rotate_by_degrees_origin(angle, axis)
 
         self._process_viewport()
 
