@@ -59,7 +59,7 @@ class Controller:
         self._vrp_z = 1000
 
         # Point to be the second extreme of the VPN
-        self._vpn_dir = Point3D('_vpn_direction', x=0, y=0, z=1)
+        self._vpn_dir = Point3D('_vpn_direction', x=0, y=0, z=-1)
 
         # Viewport values
         self.xvp_min = 10  # it was 0, changed for clipping proof
@@ -69,7 +69,7 @@ class Controller:
 
         # self.add_object_to_list(
         #    BSplineCurve('Spline',
-        #                 control_points=[
+        #                 points=[
         #                     Point3D('_', x=0, y=0, z=0),
         #                     Point3D('_', x=-100, y=200, z=0),
         #                     Point3D('_', x=-200, y=0, z=0),
@@ -269,14 +269,23 @@ class Controller:
         self.main_window.view_right_btn.clicked.connect(
             lambda: self._window_move_handler('right'))
 
-        self.main_window.rotate_x_btn.clicked.connect(
-            lambda: self._rotate_VPN('x'))
+        self.main_window.positive_rotate_x_btn.clicked.connect(
+            lambda: self._pos_rotate_VPN('x'))
 
-        self.main_window.rotate_y_btn.clicked.connect(
-            lambda: self._rotate_VPN('y'))
+        self.main_window.positive_rotate_y_btn.clicked.connect(
+            lambda: self._pos_rotate_VPN('y'))
 
-        self.main_window.rotate_z_btn.clicked.connect(
-            lambda: self._rotate_VPN('z'))
+        self.main_window.positive_rotate_z_btn.clicked.connect(
+            lambda: self._pos_rotate_VPN('z'))
+
+        self.main_window.negative_rotate_x_btn.clicked.connect(
+            lambda: self._neg_rotate_VPN('x'))
+
+        self.main_window.negative_rotate_y_btn.clicked.connect(
+            lambda: self._neg_rotate_VPN('y'))
+
+        self.main_window.negative_rotate_z_btn.clicked.connect(
+            lambda: self._neg_rotate_VPN('z'))
 
         self.main_window.color_change_action.triggered.connect(
             self._color_picker_dialog)
@@ -285,9 +294,17 @@ class Controller:
             self._transformation_dialog
         )
 
-    def _rotate_VPN(self, axis: str):
+    def _pos_rotate_VPN(self, axis: str):
         '''Modify VPN'''
         angle = int(self.main_window.axis_rotation_input.text())
+        trans = Transformator(self._vpn_dir)
+        self._vpn_dir = trans.rotate_by_degrees_origin(angle, axis)
+
+        self._process_viewport()
+
+    def _neg_rotate_VPN(self, axis: str):
+        '''Modify VPN'''
+        angle = - int(self.main_window.axis_rotation_input.text())
         trans = Transformator(self._vpn_dir)
         self._vpn_dir = trans.rotate_by_degrees_origin(angle, axis)
 
@@ -484,54 +501,49 @@ class Controller:
             )
             return
 
-        window_size_x = self.window_xmax - self.window_xmin
-        window_size_y = self.window_ymax - self.window_ymin
-        offsetx = window_size_x * step/100
-        offsety = window_size_y * step/100
-
         if mode == 'down':
             rad_angle = radians(180 - self._vup_angle_degrees)
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_ymax += offsety * cos(rad_angle)
-            self.window_ymin += offsety * cos(rad_angle)
+            self.window_ymax += step * cos(rad_angle)
+            self.window_ymin += step * cos(rad_angle)
 
-            self.window_xmax += offsety * sin(rad_angle)
-            self.window_xmin += offsety * sin(rad_angle)
+            self.window_xmax += step * sin(rad_angle)
+            self.window_xmin += step * sin(rad_angle)
 
         elif mode == 'up':
             rad_angle = radians(180 - self._vup_angle_degrees)
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_ymax -= offsety * cos(rad_angle)
-            self.window_ymin -= offsety * cos(rad_angle)
+            self.window_ymax -= step * cos(rad_angle)
+            self.window_ymin -= step * cos(rad_angle)
 
-            self.window_xmax -= offsety * sin(rad_angle)
-            self.window_xmin -= offsety * sin(rad_angle)
+            self.window_xmax -= step * sin(rad_angle)
+            self.window_xmin -= step * sin(rad_angle)
 
         elif mode == 'right':
             rad_angle = radians(self._vup_angle_degrees)
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_xmax += offsetx * cos_vup
-            self.window_xmin += offsetx * cos_vup
+            self.window_xmax += step * cos_vup
+            self.window_xmin += step * cos_vup
 
-            self.window_ymax += offsetx * sen_vup
-            self.window_ymin += offsetx * sen_vup
+            self.window_ymax += step * sen_vup
+            self.window_ymin += step * sen_vup
 
         elif mode == 'left':
             rad_angle = radians(self._vup_angle_degrees)
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_xmax -= offsetx * cos_vup
-            self.window_xmin -= offsetx * cos_vup
+            self.window_xmax -= step * cos_vup
+            self.window_xmin -= step * cos_vup
 
-            self.window_ymax -= offsetx * sen_vup
-            self.window_ymin -= offsetx * sen_vup
+            self.window_ymax -= step * sen_vup
+            self.window_ymin -= step * sen_vup
 
         self._process_viewport()
 
@@ -560,21 +572,19 @@ class Controller:
             return
 
         # Process step in pct
-        step_x = int((step/100) * (self.window_xmax - self.window_xmin))
-        step_y = int((step/100) * (self.window_ymax - self.window_ymin))
         if mode == 'in':
-            self.window_xmax -= step_x/2
-            self.window_xmin += step_x/2
+            self.window_xmax -= step/2
+            self.window_xmin += step/2
 
-            self.window_ymax -= step_y/2
-            self.window_ymin += step_y/2
+            self.window_ymax -= step/2
+            self.window_ymin += step/2
 
         elif mode == 'out':
-            self.window_xmax += step_x/2
-            self.window_xmin -= step_x/2
+            self.window_xmax += step/2
+            self.window_xmin -= step/2
 
-            self.window_ymax += step_y/2
-            self.window_ymin -= step_y/2
+            self.window_ymax += step/2
+            self.window_ymin -= step/2
 
         # Update objects on viewport
         self._process_viewport()
@@ -606,25 +616,26 @@ class Controller:
         Function to create the window that will be drew into viewport
         """
 
-        gx = Line('gy',
-                  Point3D('_gy1', -10000, 0, 0),
-                  Point3D('_gy2', 10000, 0, 0),
-                  thickness=1)
-        gx.color = QColor(255, 0, 0)
-        gy = Line('gx',
-                  Point3D('_gx1', 0, -10000, 0),
-                  Point3D('_gx2', 0, 10000, 0),
-                  thickness=1)
-        gy.color = QColor(0, 255, 0)
-        gz = Line('gz',
-                  Point3D('_gz1', 0, 0, -10000),
-                  Point3D('_gz2', 0, 0, 10000),
-                  thickness=1)
-        gz.color = QColor(0, 0, 255)
+        # gx = Line('gy',
+        #           Point3D('_gy1', -10000, 0, 0),
+        #           Point3D('_gy2', 10000, 0, 0),
+        #           thickness=1)
+        # gx.color = QColor(255, 0, 0)
+        # gy = Line('gx',
+        #           Point3D('_gx1', 0, -10000, 0),
+        #           Point3D('_gx2', 0, 10000, 0),
+        #           thickness=1)
+        # gy.color = QColor(0, 255, 0)
+        # gz = Line('gz',
+        #           Point3D('_gz1', 0, 0, -10000),
+        #           Point3D('_gz2', 0, 0, 10000),
+        #           thickness=1)
+        # gz.color = QColor(0, 0, 255)
 
-        grid = [gx, gy, gz]
+        # grid = [gx, gy, gz]
 
-        to_project_objects = grid + self.display_file
+        # to_project_objects = grid + self.display_file
+        to_project_objects = self.display_file
         projector = ParalelProjection(self.VPN)
         to_normalize_objects = projector.project(to_project_objects)
 

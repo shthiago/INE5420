@@ -265,13 +265,13 @@ class BezierCurve(BaseNamedColoredObject):
 class BSplineCurve(BaseNamedColoredObject):
     '''BSpline object descriptor'''
 
-    def __init__(self, name: str, control_points: List[Point3D], thickness: int = 3):
-        if len(control_points) < 4:
+    def __init__(self, name: str, points: List[Point3D], thickness: int = 3):
+        if len(points) < 4:
             raise ValueError('BSpline needs at least 4 points')
         super().__init__(name, QColor(0, 0, 0))
         self.thickness = thickness
 
-        self.points = control_points
+        self.points = points
         self.line_as_points = self.calculate_lines(0.1)
 
     def as_list_of_tuples(self) -> List[Tuple[int, int, int]]:

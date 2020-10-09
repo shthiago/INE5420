@@ -944,15 +944,19 @@ class ParalelProjection:
 
         matrixes = [translate_to_origin]
         vpn_translated = transform([self.VPN_end], translate_to_origin)[0]
-        if vpn_translated.y != 0:
-            angle_with_zy = degrees(atan(vpn_translated.z/vpn_translated.y))
-            matrixes.append(
-                get_rx_rotation_matrix_from_degrees(-angle_with_zy))
 
-        if vpn_translated.x != 0:
-            angle_with_zx = degrees(atan(vpn_translated.z/vpn_translated.x))
-            matrixes.append(
-                get_ry_rotation_matrix_from_degrees(angle_with_zx))
+        angle_with_zy = degrees(asin(vpn_translated.x))
+
+        matrixes.append(
+            get_rx_rotation_matrix_from_degrees(angle_with_zy))
+
+        angle_with_zx = degrees(asin(vpn_translated.y))
+        #  if negative z, correct the angle
+        if vpn_translated.z < 1e-4:
+            angle_with_zx = 180 + angle_with_zx
+
+        matrixes.append(
+            get_ry_rotation_matrix_from_degrees(-angle_with_zx))
 
         project_matrix = concat_transformation_matrixes(matrixes)
         projected_objects = []
