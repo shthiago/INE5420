@@ -106,12 +106,8 @@ def read_objfile(fname: str) -> dict:
     # Reindex vertices to be in face index order, then remove face indices.
     verts = {key: np.array(value) for key, value in verts.items()}
 
-    # print('obj_props')
-    # print(obj_props)
 
     for obj in obj_props:
-        # print('obj')
-        # print(obj)
         if not obj['f'] and not obj['cstype']:
             ##obj doesnt have faces and is not a curve
             continue
