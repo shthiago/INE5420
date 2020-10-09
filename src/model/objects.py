@@ -382,7 +382,6 @@ class Object3D(BaseNamedColoredObject):
         for face in self.faces:
             points = []
             for index in face:
-                print(index)
                 points.append(self.points[index])
 
             wireframe = Wireframe(

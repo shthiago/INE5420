@@ -79,29 +79,29 @@ class Controller:
         #                 ])
         # )
 
-        # self.add_object_to_list(
-        #     Object3D(
-        #         name='Objeto3D',
-        #         points=[
-        #             Point3D('0', x=0, y=0, z=0),
-        #             Point3D('1', x=100, y=0, z=0),
-        #             Point3D('2', x=100, y=100, z=0),
-        #             Point3D('3', x=0, y=100, z=0),
-        #             Point3D('4', x=0, y=0, z=100),
-        #             Point3D('5', x=100, y=0, z=100),
-        #             Point3D('6', x=100, y=100, z=100),
-        #             Point3D('7', x=0, y=100, z=100),
-        #         ],
-        #         faces=[
-        #             [0, 1, 2, 3],
-        #             [0, 1, 5, 4],
-        #             [0, 4, 7, 3],
-        #             [3, 2, 6, 7],
-        #             [1, 5, 6, 2],
-        #             [4, 5, 6, 7]
-        #         ]
-        #     )
-        # )
+        self.add_object_to_list(
+            Object3D(
+                name='Objeto3D',
+                points=[
+                    Point3D('0', x=0, y=0, z=0),
+                    Point3D('1', x=100, y=0, z=0),
+                    Point3D('2', x=100, y=100, z=0),
+                    Point3D('3', x=0, y=100, z=0),
+                    Point3D('4', x=0, y=0, z=100),
+                    Point3D('5', x=100, y=0, z=100),
+                    Point3D('6', x=100, y=100, z=100),
+                    Point3D('7', x=0, y=100, z=100),
+                ],
+                faces=[
+                    [0, 1, 2, 3],
+                    [0, 1, 5, 4],
+                    [0, 4, 7, 3],
+                    [3, 2, 6, 7],
+                    [1, 5, 6, 2],
+                    [4, 5, 6, 7]
+                ]
+            )
+        )
 
         # self.add_object_to_list(
         #     BSplineCurve('Spline',
@@ -125,7 +125,7 @@ class Controller:
         vpn = (Point3D('VPN_start',
                        x=wcx,
                        y=wcy,
-                       z=0),
+                       z=-1),
                Point3D('__vpn',
                        x=cos(radians(self._VPN_x_angle)) + wcx,
                        y=cos(radians(self._VPN_y_angle)) + wcy,
@@ -302,13 +302,19 @@ class Controller:
         geoms = read_wavefront(file)
 
         for name, props in geoms.items():
-            if not 'v' in props:
-                logger.error(f'Failed to load: {name}, no vertexes')
+            if not 'v' and not 'cstype' in props:
+                logger.error(f'Failed to load: {name}, no vertexes and its not a curve!')
                 continue
 
             points: List[Point3D] = []
-            for x, y, z in props['v']:
-                points.append(Point3D(name='', x=x, y=y, z=z))
+            if 'v' in props:
+                # its a point, line or polygon
+                for x, y, z in props['v']:
+                    points.append(Point3D(name='', x=x, y=y, z=z))
+            
+            if 'curv2' in props:
+                for x, y, z in props['curv2']:
+                    points.append(Point3D(name='', x=x, y=y, z=z))
 
             color = QColor(0, 0, 0)
             if 'material' in props and 'Kd' in props['material']:
@@ -338,10 +344,28 @@ class Controller:
                 self.add_object_to_list(line)
 
             elif len(points) > 2:
-                # Is a wireframe
-                wireframe = Wireframe(name=name, points=points)
-                wireframe.color = color
-                self.add_object_to_list(wireframe)
+                if props['cstype'] == 'bezier':
+                    beziersetup=[]
+                    for i in range(0,len(points), 4):
+                        p1 = points[i]
+                        p2 = points[i+1]
+                        p3 = points[i+2]
+                        p4 = points[i+3]
+                        beziersetup.append(BezierCurveSetup(p1,p2,p3,p4))
+                    bezier = BezierCurve(name = name, curve_setups=beziersetup)
+                    bezier.color = color
+                    self.add_object_to_list(bezier)
+
+                elif props['cstype'] == 'bspline':
+                    bspline = BSplineCurve(name = name, control_points=points)
+                    bspline.color = color
+                    self.add_object_to_list(bspline)
+
+                else:
+                    # Is a wireframe
+                    wireframe = Wireframe(name=name, points=points)
+                    wireframe.color = color
+                    self.add_object_to_list(wireframe)
 
     def _export_all_objects_handler(self):
         '''Get a folder from user and call the effective export function'''

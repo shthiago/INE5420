@@ -62,7 +62,7 @@ def read_objfile(fname: str) -> dict:
         lines = file.read().splitlines()
 
     for line in lines:
-        curvetype = ''
+        cstype = ''
 
         if not line.strip():
             continue
@@ -77,21 +77,23 @@ def read_objfile(fname: str) -> dict:
             obj_props.append({})
             obj = obj_props[-1]
             obj['f'] = []
-            obj[prefix] = value
+            obj[prefix] = value  #name of the obj
+            obj['cstype'] = ''
         # For files without an 'o' statement
         elif prefix == 'v' and len(obj_props) < 1:
             obj_props.append({})
             obj = obj_props[-1]
             obj['f'] = []
             obj['o'] = fname
+            obj['cstype'] = ''
         elif prefix == 'cstype':
-            curvetype = value
+            cstype = value
         elif prefix == 'curve2d':
             obj_props.append({})
             obj = obj_props[-1]
             obj['f'] = []
             obj['o'] = fname
-            obj['curvetype'] = curvetype
+            obj['cstype'] = cstype
 
         if obj_props:
             if prefix[0] == 'v':
@@ -104,19 +106,35 @@ def read_objfile(fname: str) -> dict:
     # Reindex vertices to be in face index order, then remove face indices.
     verts = {key: np.array(value) for key, value in verts.items()}
 
+    # print('obj_props')
+    # print(obj_props)
+
     for obj in obj_props:
-        if not obj['f']:
+        # print('obj')
+        # print(obj)
+        if not obj['f'] and not obj['cstype']:
+            ##obj doesnt have faces and is not a curve
             continue
 
-        obj['f'] = tuple(np.array(verts) if verts[0] else tuple()
-                         for verts in zip(*obj['f']))
-        for idx, vertname in enumerate(['v', 'vt', 'vn']):
+        obj['f'] = tuple(np.array(verts) if verts[0] else tuple() for verts in zip(*obj['f']))
 
+
+        if obj['cstype']:
+            indexes = [int(ind) for ind in obj['curv2'].split(" ")]
+            obj['curv2'] = []
+            for i in indexes:
+                x,y,z = verts['v'][i-1]
+                obj['curv2'].append([x,y,z])
+
+        for idx, vertname in enumerate(['v', 'vt', 'vn']):
             if vertname in verts:
-                obj[vertname] = verts[vertname][obj['f'][idx].flatten() - 1, :]
+                if obj['f']:
+                    obj[vertname] = verts[vertname][obj['f'][idx].flatten() - 1, :]
             else:
                 obj[vertname] = tuple()
         del obj['f']
+
+ 
 
     geoms = {obj['o']: obj for obj in obj_props if 'f' not in obj}
 
@@ -146,5 +164,5 @@ def read_wavefront(fname_obj: str) -> dict:
         for geom in geoms.values():
             if 'usemtl' in geom:
                 geom['material'] = materials[geom['usemtl']]
-
+                
     return geoms

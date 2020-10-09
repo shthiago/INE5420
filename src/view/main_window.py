@@ -121,6 +121,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.axis_rotation_input.setValidator(
             QtGui.QIntValidator(-360, 360))
 
+        self.degrees_unit_lbl2 = QtWidgets.QLabel(self.tools_menu_box)
+        self.degrees_unit_lbl2.setGeometry(QtCore.QRect(100, 415, 16, 16))
+        self.degrees_unit_lbl2.setText("º")
+
         self.rotate_x_btn = QtWidgets.QPushButton(self.tools_menu_box)
         self.rotate_x_btn.setGeometry(QtCore.QRect(20, 440, 31, 23))
         self.rotate_x_btn.setText("X")
