@@ -944,15 +944,19 @@ class ParalelProjection:
 
         matrixes = [translate_to_origin]
         vpn_translated = transform([self.VPN_end], translate_to_origin)[0]
-        if vpn_translated.y != 0:
-            angle_with_zx = degrees(atan(vpn_translated.y/vpn_translated.z))
-            matrixes.append(
-                get_rx_rotation_matrix_from_degrees(angle_with_zx))
 
-        if vpn_translated.x != 0:
-            angle_with_y = degrees(atan(vpn_translated.x/vpn_translated.z))
-            matrixes.append(
-                get_ry_rotation_matrix_from_degrees(-angle_with_y))
+        angle_with_zy = degrees(asin(vpn_translated.x))
+
+        matrixes.append(
+            get_rx_rotation_matrix_from_degrees(angle_with_zy))
+
+        angle_with_zx = degrees(asin(vpn_translated.y))
+        #  if negative z, correct the angle
+        if vpn_translated.z < 1e-4:
+            angle_with_zx = 180 + angle_with_zx
+
+        matrixes.append(
+            get_ry_rotation_matrix_from_degrees(-angle_with_zx))
 
         project_matrix = concat_transformation_matrixes(matrixes)
         projected_objects = []
@@ -971,9 +975,15 @@ class ParalelProjection:
                 projected_objects.append(new_obj)
 
             elif isinstance(obj, Wireframe) or \
-                    isinstance(obj, Object3D) or \
-                    isinstance(obj, BSplineCurve):
+                    isinstance(obj, Object3D):
                 new_points = transform(obj.points, project_matrix)
+                new_obj = deepcopy(obj)
+                new_obj.points = new_points
+
+                projected_objects.append(new_obj)
+            
+            elif isinstance(obj, BSplineCurve):
+                new_points = transform(obj.control_points, project_matrix)
                 new_obj = deepcopy(obj)
                 new_obj.points = new_points
 

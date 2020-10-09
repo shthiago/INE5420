@@ -32,10 +32,6 @@ class Controller:
         # Angle between the Vup vector and the world Y axis
         self._vup_angle_degrees = 0
 
-        # Point to be the second extreme of the VPN
-        self._VPN_x_angle = 90
-        self._VPN_y_angle = 90
-
         # Init main interface
         self.app = QApplication(sys.argv)
 
@@ -60,6 +56,10 @@ class Controller:
         self.window_ymin = -300
         self.window_xmax = 300
         self.window_ymax = 300
+        self._vrp_z = 1000
+
+        # Point to be the second extreme of the VPN
+        self._vpn_dir = Point3D('_vpn_direction', x=0, y=0, z=-1)
 
         # Viewport values
         self.xvp_min = 10  # it was 0, changed for clipping proof
@@ -69,7 +69,7 @@ class Controller:
 
         # self.add_object_to_list(
         #    BSplineCurve('Spline',
-        #                 control_points=[
+        #                 points=[
         #                     Point3D('_', x=0, y=0, z=0),
         #                     Point3D('_', x=-100, y=200, z=0),
         #                     Point3D('_', x=-200, y=0, z=0),
@@ -118,18 +118,24 @@ class Controller:
         self._process_viewport()
 
     @property
-    def VPN(self) -> Tuple[Point3D, Point3D]:
-        '''Return VRP and a Point3D'''
+    def VRP(self) -> Point3D:
+        '''Return window center'''
         wcx = (self.window_xmax+self.window_xmin)/2
         wcy = (self.window_ymax+self.window_ymin)/2
-        vpn = (Point3D('VPN_start',
+        return Point3D('VPN_start',
                        x=wcx,
                        y=wcy,
-                       z=-1),
-               Point3D('__vpn',
-                       x=cos(radians(self._VPN_x_angle)) + wcx,
-                       y=cos(radians(self._VPN_y_angle)) + wcy,
-                       z=1))
+                       z=self._vrp_z)
+
+    @property
+    def VPN(self) -> Tuple[Point3D, Point3D]:
+        '''Return VRP and a Point3D'''
+        vrp = self.VRP
+        vpn = (vrp,
+               Point3D('_vpn_end',
+                       x=self._vpn_dir.x + vrp.x,
+                       y=self._vpn_dir.y + vrp.y,
+                       z=self._vpn_dir.z + vrp.z))
         return vpn
 
     def run(self):
@@ -263,14 +269,23 @@ class Controller:
         self.main_window.view_right_btn.clicked.connect(
             lambda: self._window_move_handler('right'))
 
-        self.main_window.rotate_x_btn.clicked.connect(
-            lambda: self._rotate_VPN('x'))
+        self.main_window.positive_rotate_x_btn.clicked.connect(
+            lambda: self._pos_rotate_VPN('x'))
 
-        self.main_window.rotate_y_btn.clicked.connect(
-            lambda: self._rotate_VPN('y'))
+        self.main_window.positive_rotate_y_btn.clicked.connect(
+            lambda: self._pos_rotate_VPN('y'))
 
-        self.main_window.rotate_z_btn.clicked.connect(
-            lambda: self._rotate_VPN('z'))
+        self.main_window.positive_rotate_z_btn.clicked.connect(
+            lambda: self._pos_rotate_VPN('z'))
+
+        self.main_window.negative_rotate_x_btn.clicked.connect(
+            lambda: self._neg_rotate_VPN('x'))
+
+        self.main_window.negative_rotate_y_btn.clicked.connect(
+            lambda: self._neg_rotate_VPN('y'))
+
+        self.main_window.negative_rotate_z_btn.clicked.connect(
+            lambda: self._neg_rotate_VPN('z'))
 
         self.main_window.color_change_action.triggered.connect(
             self._color_picker_dialog)
@@ -279,13 +294,19 @@ class Controller:
             self._transformation_dialog
         )
 
-    def _rotate_VPN(self, axis: str):
+    def _pos_rotate_VPN(self, axis: str):
         '''Modify VPN'''
         angle = int(self.main_window.axis_rotation_input.text())
-        if axis == 'x':
-            self._VPN_x_angle += angle
-        elif axis == 'y':
-            self._VPN_y_angle += angle
+        trans = Transformator(self._vpn_dir)
+        self._vpn_dir = trans.rotate_by_degrees_origin(angle, axis)
+
+        self._process_viewport()
+
+    def _neg_rotate_VPN(self, axis: str):
+        '''Modify VPN'''
+        angle = - int(self.main_window.axis_rotation_input.text())
+        trans = Transformator(self._vpn_dir)
+        self._vpn_dir = trans.rotate_by_degrees_origin(angle, axis)
 
         self._process_viewport()
 
@@ -352,15 +373,21 @@ class Controller:
                         p3 = points[i+2]
                         p4 = points[i+3]
                         beziersetup.append(BezierCurveSetup(p1,p2,p3,p4))
-                    bezier = BezierCurve(name = name, curve_setups=beziersetup)
+                    bezier = BezierCurve(name=name, curve_setups=beziersetup)
                     bezier.color = color
                     self.add_object_to_list(bezier)
 
                 elif props['cstype'] == 'bspline':
-                    bspline = BSplineCurve(name = name, control_points=points)
+                    bspline = BSplineCurve(name=name, control_points=points)
                     bspline.color = color
                     self.add_object_to_list(bspline)
 
+                elif props['number_faces'] > 1:
+                    # its a 3d object
+                    faces = props['faces']
+                    object3d = Object3D(name=name, points=points, faces=faces)
+                    object3d.color = color
+                    self.add_object_to_list(object3d )
                 else:
                     # Is a wireframe
                     wireframe = Wireframe(name=name, points=points)
@@ -504,54 +531,49 @@ class Controller:
             )
             return
 
-        window_size_x = self.window_xmax - self.window_xmin
-        window_size_y = self.window_ymax - self.window_ymin
-        offsetx = window_size_x * step/100
-        offsety = window_size_y * step/100
-
         if mode == 'down':
             rad_angle = radians(180 - self._vup_angle_degrees)
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_ymax += offsety * cos(rad_angle)
-            self.window_ymin += offsety * cos(rad_angle)
+            self.window_ymax += step * cos(rad_angle)
+            self.window_ymin += step * cos(rad_angle)
 
-            self.window_xmax += offsety * sin(rad_angle)
-            self.window_xmin += offsety * sin(rad_angle)
+            self.window_xmax += step * sin(rad_angle)
+            self.window_xmin += step * sin(rad_angle)
 
         elif mode == 'up':
             rad_angle = radians(180 - self._vup_angle_degrees)
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_ymax -= offsety * cos(rad_angle)
-            self.window_ymin -= offsety * cos(rad_angle)
+            self.window_ymax -= step * cos(rad_angle)
+            self.window_ymin -= step * cos(rad_angle)
 
-            self.window_xmax -= offsety * sin(rad_angle)
-            self.window_xmin -= offsety * sin(rad_angle)
+            self.window_xmax -= step * sin(rad_angle)
+            self.window_xmin -= step * sin(rad_angle)
 
         elif mode == 'right':
             rad_angle = radians(self._vup_angle_degrees)
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_xmax += offsetx * cos_vup
-            self.window_xmin += offsetx * cos_vup
+            self.window_xmax += step * cos_vup
+            self.window_xmin += step * cos_vup
 
-            self.window_ymax += offsetx * sen_vup
-            self.window_ymin += offsetx * sen_vup
+            self.window_ymax += step * sen_vup
+            self.window_ymin += step * sen_vup
 
         elif mode == 'left':
             rad_angle = radians(self._vup_angle_degrees)
             sen_vup = sin(rad_angle)
             cos_vup = cos(rad_angle)
 
-            self.window_xmax -= offsetx * cos_vup
-            self.window_xmin -= offsetx * cos_vup
+            self.window_xmax -= step * cos_vup
+            self.window_xmin -= step * cos_vup
 
-            self.window_ymax -= offsetx * sen_vup
-            self.window_ymin -= offsetx * sen_vup
+            self.window_ymax -= step * sen_vup
+            self.window_ymin -= step * sen_vup
 
         self._process_viewport()
 
@@ -580,21 +602,19 @@ class Controller:
             return
 
         # Process step in pct
-        step_x = int((step/100) * (self.window_xmax - self.window_xmin))
-        step_y = int((step/100) * (self.window_ymax - self.window_ymin))
         if mode == 'in':
-            self.window_xmax -= step_x/2
-            self.window_xmin += step_x/2
+            self.window_xmax -= step/2
+            self.window_xmin += step/2
 
-            self.window_ymax -= step_y/2
-            self.window_ymin += step_y/2
+            self.window_ymax -= step/2
+            self.window_ymin += step/2
 
         elif mode == 'out':
-            self.window_xmax += step_x/2
-            self.window_xmin -= step_x/2
+            self.window_xmax += step/2
+            self.window_xmin -= step/2
 
-            self.window_ymax += step_y/2
-            self.window_ymin -= step_y/2
+            self.window_ymax += step/2
+            self.window_ymin -= step/2
 
         # Update objects on viewport
         self._process_viewport()
@@ -626,25 +646,26 @@ class Controller:
         Function to create the window that will be drew into viewport
         """
 
-        gx = Line('gy',
-                  Point3D('_gy1', -10000, 0, 0),
-                  Point3D('_gy2', 10000, 0, 0),
-                  thickness=1)
-        gx.color = QColor(255, 0, 0)
-        gy = Line('gx',
-                  Point3D('_gx1', 0, -10000, 0),
-                  Point3D('_gx2', 0, 10000, 0),
-                  thickness=1)
-        gy.color = QColor(0, 255, 0)
-        gz = Line('gz',
-                  Point3D('_gz1', 0, 0, -10000),
-                  Point3D('_gz2', 0, 0, 10000),
-                  thickness=1)
-        gz.color = QColor(0, 0, 255)
+        # gx = Line('gy',
+        #           Point3D('_gy1', -10000, 0, 0),
+        #           Point3D('_gy2', 10000, 0, 0),
+        #           thickness=1)
+        # gx.color = QColor(255, 0, 0)
+        # gy = Line('gx',
+        #           Point3D('_gx1', 0, -10000, 0),
+        #           Point3D('_gx2', 0, 10000, 0),
+        #           thickness=1)
+        # gy.color = QColor(0, 255, 0)
+        # gz = Line('gz',
+        #           Point3D('_gz1', 0, 0, -10000),
+        #           Point3D('_gz2', 0, 0, 10000),
+        #           thickness=1)
+        # gz.color = QColor(0, 0, 255)
 
-        grid = [gx, gy, gz]
+        # grid = [gx, gy, gz]
 
-        to_project_objects = grid + self.display_file
+        # to_project_objects = grid + self.display_file
+        to_project_objects = self.display_file
         projector = ParalelProjection(self.VPN)
         to_normalize_objects = projector.project(to_project_objects)
 

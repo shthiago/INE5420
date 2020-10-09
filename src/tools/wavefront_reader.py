@@ -73,12 +73,14 @@ def read_objfile(fname: str) -> dict:
             continue
 
         prefix, value = split_line[0], split_line[1]
+
         if prefix == 'o':
             obj_props.append({})
             obj = obj_props[-1]
             obj['f'] = []
-            obj[prefix] = value  #name of the obj
+            obj[prefix] = value
             obj['cstype'] = ''
+
         # For files without an 'o' statement
         elif prefix == 'v' and len(obj_props) < 1:
             obj_props.append({})
@@ -86,8 +88,10 @@ def read_objfile(fname: str) -> dict:
             obj['f'] = []
             obj['o'] = fname
             obj['cstype'] = ''
+
         elif prefix == 'cstype':
             cstype = value
+
         elif prefix == 'curve2d':
             obj_props.append({})
             obj = obj_props[-1]
@@ -99,6 +103,9 @@ def read_objfile(fname: str) -> dict:
             if prefix[0] == 'v':
                 verts[prefix].append([float(val) for val in value.split(' ')])
             elif prefix == 'f' or prefix == 'l' or prefix == 'p':
+                obj['faces'] = []
+                for face in obj['f']:
+                    obj['faces'].append(face[0])
                 obj['f'].append(parse_mixed_delim_str(value))
             else:
                 obj[prefix] = value
@@ -108,6 +115,8 @@ def read_objfile(fname: str) -> dict:
 
 
     for obj in obj_props:
+        obj['number_faces'] = len(obj['f'])
+
         if not obj['f'] and not obj['cstype']:
             ##obj doesnt have faces and is not a curve
             continue
@@ -122,16 +131,23 @@ def read_objfile(fname: str) -> dict:
                 x,y,z = verts['v'][i-1]
                 obj['curv2'].append([x,y,z])
 
+        print(verts)
         for idx, vertname in enumerate(['v', 'vt', 'vn']):
             if vertname in verts:
-                if obj['f']:
+                if obj['f'] and obj['number_faces'] == 1: # and verts[vertname][obj['f'][idx].flatten() - 1, :] not in obj[vertname]:
+                    # print('verts vertname')
+                    # print(verts[vertname][obj['f'][idx].flatten() - 1, :])
+                    # print('---------------------------------------------')
+                    # print()
                     obj[vertname] = verts[vertname][obj['f'][idx].flatten() - 1, :]
+                elif obj['f'] and obj['number_faces'] > 1:
+                    obj[vertname] = verts[vertname]
             else:
                 obj[vertname] = tuple()
         del obj['f']
 
     geoms = {obj['o']: obj for obj in obj_props if 'f' not in obj}
-
+    print(geoms)
     return geoms
 
 
