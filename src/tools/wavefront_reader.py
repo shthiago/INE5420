@@ -104,9 +104,11 @@ def read_objfile(fname: str) -> dict:
                 verts[prefix].append([float(val) for val in value.split(' ')])
             elif prefix == 'f' or prefix == 'l' or prefix == 'p':
                 obj['faces'] = []
+                obj['f'].append(parse_mixed_delim_str(value))
                 for face in obj['f']:
                     obj['faces'].append(face[0])
-                obj['f'].append(parse_mixed_delim_str(value))
+                
+                
             else:
                 obj[prefix] = value
 
@@ -131,14 +133,10 @@ def read_objfile(fname: str) -> dict:
                 x,y,z = verts['v'][i-1]
                 obj['curv2'].append([x,y,z])
 
-        print(verts)
+
         for idx, vertname in enumerate(['v', 'vt', 'vn']):
             if vertname in verts:
-                if obj['f'] and obj['number_faces'] == 1: # and verts[vertname][obj['f'][idx].flatten() - 1, :] not in obj[vertname]:
-                    # print('verts vertname')
-                    # print(verts[vertname][obj['f'][idx].flatten() - 1, :])
-                    # print('---------------------------------------------')
-                    # print()
+                if obj['f'] and obj['number_faces'] == 1:
                     obj[vertname] = verts[vertname][obj['f'][idx].flatten() - 1, :]
                 elif obj['f'] and obj['number_faces'] > 1:
                     obj[vertname] = verts[vertname]
@@ -147,7 +145,7 @@ def read_objfile(fname: str) -> dict:
         del obj['f']
 
     geoms = {obj['o']: obj for obj in obj_props if 'f' not in obj}
-    print(geoms)
+
     return geoms
 
 

@@ -396,20 +396,11 @@ class Object3D(BaseNamedColoredObject):
     
     def as_list_of_tuples(self) -> List[Tuple[int, int, int]]:
         '''Return points as list of tuples'''
-        tuples = []
-        # if you are exporting all the lines
-        #tuples.append((self.line_as_points[0].p1.x, self.line_as_points[0].p1.y, self.line_as_points[0].p1.z))
-        # for line in self.line_as_points:
-        #    tuples.append((line.p2.x, line.p2.y, line.p2.z))
-
-        # if you are exporting the control points
-        for points in self.points:
-            tuples.append((points.x, points.y, points.z))
-
-        return tuples
+        print('list of tuples')
+        print(self.points)
+        return [p.as_tuple() for p in self.points]
     
-    def describe_export_with(self,
-                             colors: List[QColor]) -> List[str]:
+    def describe_export_with(self, points: List[Tuple[float, float, float]], colors: List[QColor]) -> List[str]:
         '''Return lines that describe object in .obj file, using indexes
         from points and names from colors'''
 
@@ -417,16 +408,15 @@ class Object3D(BaseNamedColoredObject):
         #indexes = [str(points.index(p) + 1) for p in self.as_list_of_tuples()]
 
         faces_in_obj = ''
-        print(self.faces)
         for f in self.faces:
-            #f = list[list[]]
-            print(f)
+            aux = str(f).strip('()')
+            faces_in_obj += 'f ' + aux.replace(',','')
+            faces_in_obj += '\n'
 
-
-        return ['# BSpline',
+        return ['# 3D Object',
                 f'o {self.name}',
                 f'usemtl {self.color.name()[1:]}',
-                f'{faces}']
+                f'{faces_in_obj}']
 
 
 class ViewportObjectRepresentation(NamedTuple):

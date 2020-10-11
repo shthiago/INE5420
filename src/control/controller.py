@@ -330,7 +330,7 @@ class Controller:
             points: List[Point3D] = []
             if 'v' in props:
                 # its a point, line or polygon
-                for x, y, z in props['v']:
+                for x,y,z in props['v']:
                     points.append(Point3D(name='', x=x, y=y, z=z))
             
             if 'curv2' in props:
@@ -444,9 +444,11 @@ class Controller:
 
     def _collect_all_points(self) -> List[Tuple[float, float, float]]:
         '''Read all unique used points by every object'''
-        points = set()
+        points = []
         for obj in self.display_file:
-            points.update(obj.as_list_of_tuples())
+            for tp in obj.as_list_of_tuples():
+                if tp not in points:
+                    points.append(tp)
 
         return list(points)
 
