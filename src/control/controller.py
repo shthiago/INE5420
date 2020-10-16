@@ -64,7 +64,7 @@ class Controller:
         self.window_ymin = -300
         self.window_xmax = 300
         self.window_ymax = 300
-        self._vrp_z = 200
+        self._vrp_z = 500
 
         # Point to be the second extreme of the VPN
         self._vpn_dir = Point3D('_vpn_direction', x=0, y=0, z=-1)
@@ -735,16 +735,11 @@ class Controller:
                                     ) -> List[Union[Point3D, Line, Wireframe]]:
         '''Take internal Vup vector and rotate grid and internal list of objects'''
 
-        window_center_x = (self.window_xmax + self.window_xmin)/2
-        window_center_y = (self.window_ymax + self.window_ymin)/2
         window_width = self.window_ymax - self.window_ymin
         window_height = self.window_xmax - self.window_xmin
 
         normalizer = Normalizer(
-            Point3D('_wc',
-                    x=window_center_x,
-                    y=window_center_y,
-                    z=0),
+            self.VRP,
             window_height,
             window_width,
             vup_angle=self._vup_angle_degrees

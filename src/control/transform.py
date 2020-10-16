@@ -1,6 +1,6 @@
 '''Transformations for objects'''
 from typing import List, Union, Tuple
-from math import cos, sin, radians, atan, degrees, asin, sqrt
+from math import cos, sin, radians, atan, degrees, asin, sqrt, acos
 from statistics import mean
 from copy import deepcopy
 
@@ -956,7 +956,7 @@ class Projector:
         angle_with_zx = degrees(asin(vpn_translated.y))
         #  if negative z, correct the angle
         if vpn_translated.z < -1e-4:
-            angle_with_zx = 180 + angle_with_zx
+            angle_with_zx = 180 - angle_with_zx
 
         matrixes.append(
             get_ry_rotation_matrix_from_degrees(-angle_with_zx))
@@ -1035,11 +1035,22 @@ class Projector:
                                        BSplineCurve, Object3D]:
         '''Apply project transformation over intern list objects'''
         matrix = self.get_paralel_transformation_matrix()
-        return self.apply_matrix_to_objects(matrix)
+        projected = self.apply_matrix_to_objects(matrix)
+        # trasnlate back
+        self._objects = projected
+        return self.apply_matrix_to_objects(get_translation_matrix(
+            desloc_x=self.VRP.x,
+            desloc_y=self.VRP.y,
+            desloc_z=self.VRP.z))
 
     def project_perspective(self, d_value: int) -> Union[Point3D, Line, Wireframe, BezierCurve,
                                                          BSplineCurve, Object3D]:
         '''Apply project transformation over intern list of objects'''
         matrix = self.get_perspective_transformation_matrix(d_value)
-
-        return self.apply_matrix_to_objects(matrix)
+        projected = self.apply_matrix_to_objects(matrix)
+        # trasnlate back
+        self._objects = projected
+        return self.apply_matrix_to_objects(get_translation_matrix(
+            desloc_x=self.VRP.x,
+            desloc_y=self.VRP.y,
+            desloc_z=self.VRP.z))
