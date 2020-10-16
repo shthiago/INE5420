@@ -16,7 +16,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Tools setup
         self.tools_menu_box = QtWidgets.QGroupBox(self)
-        self.tools_menu_box.setGeometry(QtCore.QRect(10, 20, 171, 561))
+        self.tools_menu_box.setGeometry(QtCore.QRect(10, 20, 171, 581))
         self.tools_menu_box.setTitle("Tools Menu")
 
         self.objects_lbl = QtWidgets.QLabel(self.tools_menu_box)
@@ -79,12 +79,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view_down_btn.setText("Down")
 
         self.in_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        self.in_btn.setGeometry(QtCore.QRect(100, 230, 31, 23))
+        self.in_btn.setGeometry(QtCore.QRect(95, 230, 31, 23))
         self.in_btn.setText("In")
 
         self.out_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        self.out_btn.setGeometry(QtCore.QRect(100, 270, 31, 23))
+        self.out_btn.setGeometry(QtCore.QRect(95, 270, 31, 23))
         self.out_btn.setText("Out")
+
+        self.z_plus_btn = QtWidgets.QPushButton(self.tools_menu_box)
+        self.z_plus_btn.setGeometry(QtCore.QRect(127, 230, 31, 23))
+        self.z_plus_btn.setText("+")
+
+        self.z_minus_btn = QtWidgets.QPushButton(self.tools_menu_box)
+        self.z_minus_btn.setGeometry(QtCore.QRect(127, 270, 31, 23))
+        self.z_minus_btn.setText("-")
 
         self.rotate_lbl = QtWidgets.QLabel(self.tools_menu_box)
         self.rotate_lbl.setGeometry(QtCore.QRect(10, 310, 57, 15))
@@ -126,58 +134,42 @@ class MainWindow(QtWidgets.QMainWindow):
             QtGui.QIntValidator(-360, 360))
 
         self.positive_rotate_x_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        self.positive_rotate_x_btn.setGeometry(QtCore.QRect(0, 440, 31, 23))
+        self.positive_rotate_x_btn.setGeometry(QtCore.QRect(5, 440, 31, 23))
         self.positive_rotate_x_btn.setText("+X")
 
         self.positive_rotate_y_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        self.positive_rotate_y_btn.setGeometry(QtCore.QRect(0, 465, 31, 23))
+        self.positive_rotate_y_btn.setGeometry(QtCore.QRect(5, 465, 31, 23))
         self.positive_rotate_y_btn.setText("+Y")
 
         self.positive_rotate_z_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        self.positive_rotate_z_btn.setGeometry(QtCore.QRect(0, 490, 31, 23))
+        self.positive_rotate_z_btn.setGeometry(QtCore.QRect(5, 490, 31, 23))
         self.positive_rotate_z_btn.setText("+Z")
 
         self.negative_rotate_x_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        self.negative_rotate_x_btn.setGeometry(QtCore.QRect(40, 440, 31, 23))
+        self.negative_rotate_x_btn.setGeometry(QtCore.QRect(45, 440, 31, 23))
         self.negative_rotate_x_btn.setText("-X")
 
         self.negative_rotate_y_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        self.negative_rotate_y_btn.setGeometry(QtCore.QRect(40, 465, 31, 23))
+        self.negative_rotate_y_btn.setGeometry(QtCore.QRect(45, 465, 31, 23))
         self.negative_rotate_y_btn.setText("-Y")
 
         self.negative_rotate_z_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        self.negative_rotate_z_btn.setGeometry(QtCore.QRect(40, 490, 31, 23))
+        self.negative_rotate_z_btn.setGeometry(QtCore.QRect(45, 490, 31, 23))
         self.negative_rotate_z_btn.setText("-Z")
 
-        # self.zoom_lbl = QtWidgets.QLabel(self.tools_menu_box)
-        # self.zoom_lbl.setGeometry(QtCore.QRect(30, 400, 57, 15))
-        # self.zoom_lbl.setText("Zoom")
+        self.projection_lbl = QtWidgets.QLabel(self.tools_menu_box)
+        self.projection_lbl.setGeometry(QtCore.QRect(10, 520, 81, 16))
+        self.projection_lbl.setText("Projection")
 
-        # self.zoom_in_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        # self.zoom_in_btn.setGeometry(QtCore.QRect(70, 420, 31, 23))
-        # self.zoom_in_btn.setText("+")
-
-        # self.zoom_out_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        # self.zoom_out_btn.setGeometry(QtCore.QRect(20, 420, 31, 23))
-        # self.zoom_out_btn.setText("-")
-
-        # self.set_window_btn = QtWidgets.QPushButton(self.tools_menu_box)
-        # self.set_window_btn.setGeometry(QtCore.QRect(20, 450, 80, 23))
-        # self.set_window_btn.setText("Set Window")
-
-        # self.projection_lbl = QtWidgets.QLabel(self.tools_menu_box)
-        # self.projection_lbl.setGeometry(QtCore.QRect(10, 490, 81, 16))
-        # self.projection_lbl.setText("Projection")
-
-        # self.paralel_radio_btn = QtWidgets.QRadioButton(self.tools_menu_box)
-        # self.paralel_radio_btn.setGeometry(QtCore.QRect(10, 510, 99, 21))
-        # self.paralel_radio_btn.setText("Paralel")
-        # # Default is paralel
-        # self.paralel_radio_btn.toggle()
-        # self.perspective_radio_btn = QtWidgets.QRadioButton(
-        #     self.tools_menu_box)
-        # self.perspective_radio_btn.setGeometry(QtCore.QRect(10, 530, 99, 21))
-        # self.perspective_radio_btn.setText("Perspective")
+        self.paralel_radio_btn = QtWidgets.QRadioButton(self.tools_menu_box)
+        self.paralel_radio_btn.setGeometry(QtCore.QRect(10, 540, 99, 21))
+        self.paralel_radio_btn.setText("Paralel")
+        # Default is paralel
+        self.paralel_radio_btn.toggle()
+        self.perspective_radio_btn = QtWidgets.QRadioButton(
+            self.tools_menu_box)
+        self.perspective_radio_btn.setGeometry(QtCore.QRect(10, 560, 99, 21))
+        self.perspective_radio_btn.setText("Perspective")
 
         # Canvas setup
         self.viewport = ViewPort(self)
