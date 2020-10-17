@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import List, Union, Tuple, Optional
 from math import isclose
 
-from src.model.objects import Point3D, Line, Wireframe
+from src.model.objects import Point3D, Line, Wireframe, BicubicSurface
 
 
 @dataclass
@@ -65,7 +65,12 @@ class Clipper:
         '''
 
         cliped_objects: List[Union[Point3D, Line, Wireframe]] = []
+        print('objects to be clipped')
+        print(objects)
         for obj in objects:
+            print()
+            print('Object being clipped')
+            print(obj)
             if isinstance(obj, Point3D):
                 inside_window, new_obj = self._clip_point(obj)
                 if inside_window and obj.z > 1e-4:

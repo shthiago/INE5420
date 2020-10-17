@@ -418,6 +418,106 @@ class Object3D(BaseNamedColoredObject):
                 f'usemtl {self.color.name()[1:]}',
                 f'{faces_in_obj}']
 
+class BicubicSetup(NamedTuple):
+    '''Setup to create a Bezier blending function'''
+    P1: Point3D
+    P2: Point3D
+    P3: Point3D
+    P4: Point3D
+    P5: Point3D
+    P6: Point3D
+    P7: Point3D
+    P8: Point3D
+    P9: Point3D
+    P10: Point3D
+    P11: Point3D
+    P12: Point3D
+    P13: Point3D
+    P14: Point3D
+    P15: Point3D
+    P16: Point3D
+
+class BicubicSurface(BaseNamedColoredObject):
+    '''Surface composed by cubic curves'''
+
+    def __init__(self, name: str, setup: BicubicSetup,
+                 thickness: int = 3):
+        super().__init__(name, QColor(0, 0, 0))
+        self.thickness = thickness
+
+        self.setup = setup
+        self.points = self.calc_superficie(0.1,0.1)
+    
+    def create_matrices(self):
+        setup = self.setup
+        gbx = []
+        gby = []
+        gbz = []
+        for p in range(0,15,4):
+            p1 = setup[p]
+            p2 = setup[p+1]
+            p3 = setup[p+2]
+            p4 = setup[p+3]
+
+            gbx.append([p1.x,p2.x,p3.x,p4.x])
+            gby.append([p1.y,p2.y,p3.y,p4.y])
+            gbz.append([p1.z,p2.z,p3.z,p4.z])
+        
+        return gbx,gby,gbz
+    
+    def matrix_s(self, s):
+        return np.array([s**3, s**2, s, 1])
+    
+    def matrix_t(self,t):
+        return np.array([t**3, t**2, t, 1])
+    
+    def calc_x(self, s1,t1,mb,gbx):
+        return (((self.matrix_s(s1).dot(mb)).dot(gbx)).dot((np.transpose(mb)))).dot((np.transpose(self.matrix_t(t1))))
+    
+    def calc_y(self, s1,t1,mb,gby):
+        return (((self.matrix_s(s1).dot(mb)).dot(gby)).dot((np.transpose(mb)))).dot((np.transpose(self.matrix_t(t1))))
+    
+    def calc_z(self, s1,t1,mb,gbz):
+        return (((self.matrix_s(s1).dot(mb)).dot(gbz)).dot((np.transpose(mb)))).dot((np.transpose(self.matrix_t(t1))))
+    
+    def calc_superficie(self, s,t):
+        mb =  [[-1,3,-3,1], [3,-6,3,0],[-3,3,0,0],[1,0,0,0]]
+        gbx, gby, gbz = self.create_matrices()
+        points = []
+        xss = []
+        yss = []
+        zss = []
+
+        for i in np.arange(0,1,s):
+            for r in np.arange(0,1,t):
+                x1 = self.calc_x(i,r, mb, gbx)
+                xss.append(x1)
+                y1 = self.calc_y(i,r, mb, gby)
+                yss.append(y1)
+                z1 = self.calc_z(i,r, mb, gbz)
+                zss.append(z1)
+
+            p = Point3D('__', x1,y1,z1)
+            points.append(p)
+        
+        return points #, xss, yss, zss
+    
+    def get_wireframe(self) -> List[Wireframe]:
+        '''Connect the points for each face and return one wireframe'''
+
+        points = self.points
+
+        wireframe = Wireframe(
+                name='__',
+                points=points,
+                thickness=self.thickness
+            )
+        wireframe.color = self.color
+        
+        return wireframe
+
+
+
 
 class ViewportObjectRepresentation(NamedTuple):
     '''Class to hold data of a object ready to be draw at viewport'''

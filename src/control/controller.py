@@ -11,8 +11,8 @@ from loguru import logger
 
 from src.control.transform import Transformator, Normalizer, ParalelProjection
 from src.model import new_object_factory
-from src.model.objects import Point3D, Line, Wireframe, BezierCurve, BSplineCurve, Object3D
-from src.model.objects import ViewportObjectRepresentation, BezierCurveSetup
+from src.model.objects import Point3D, Line, Wireframe, BezierCurve, BSplineCurve, Object3D, BicubicSurface
+from src.model.objects import ViewportObjectRepresentation, BezierCurveSetup, BicubicSetup
 from src.tools.wavefront_reader import read_wavefront
 from src.tools.clipper import Clipper, ClipperSetup
 from src.view.main_window import MainWindow
@@ -103,17 +103,39 @@ class Controller:
         #     )
         # )
 
-        # self.add_object_to_list(
-        #     BSplineCurve('Spline',
-        #                  points=[
-        #                      Point3D('_', x=0, y=0, z=0),
-        #                      Point3D('_', x=-100, y=200, z=0),
-        #                      Point3D('_', x=-200, y=0, z=0),
-        #                      Point3D('_', x=-300, y=-200, z=0),
-        #                      Point3D('_', x=-400, y=0, z=0),
-        #                      Point3D('_', x=-500, y=500, z=0),
-        #                  ])
-        # )
+        self.add_object_to_list(
+            BSplineCurve('Spline',
+                         control_points=[
+                             Point3D('_', x=0, y=0, z=0),
+                             Point3D('_', x=-100, y=200, z=0),
+                             Point3D('_', x=-200, y=0, z=0),
+                             Point3D('_', x=-300, y=-200, z=0),
+                             Point3D('_', x=-400, y=0, z=0),
+                             Point3D('_', x=-500, y=500, z=0),
+                         ])
+        )
+
+        self.add_object_to_list(
+            BicubicSurface('bicubic',
+                         setup=BicubicSetup(
+                             Point3D('_', x=0, y=0, z=0),
+                             Point3D('_', x=-100, y=0, z=0),
+                             Point3D('_', x=-200, y=0, z=0),
+                             Point3D('_', x=-300, y=0, z=0),
+                             Point3D('_', x=-400, y=0, z=0),
+                             Point3D('_', x=-500, y=0, z=0),
+                             Point3D('_', x=0, y=100, z=0),
+                             Point3D('_', x=0, y=200, z=0),
+                             Point3D('_', x=0, y=300, z=0),
+                             Point3D('_', x=0, y=-400, z=0),
+                             Point3D('_', x=0, y=500, z=0),
+                             Point3D('_', x=0, y=0, z=100),
+                             Point3D('_', x=0, y=0, z=200),
+                             Point3D('_', x=0, y=-0, z=300),
+                             Point3D('_', x=0, y=0, z=400),
+                             Point3D('_', x=0, y=0, z=5000),
+                            ))
+        )
 
         self._process_viewport()
 
@@ -682,6 +704,10 @@ class Controller:
             normalized_display_file)
 
         transformed_groups_of_points: List[ViewportObjectRepresentation] = []
+
+        print('clipped_normalized_display_file')
+        print()
+
         for obj in clipped_normalized_display_file:
             if isinstance(obj, Point3D):
                 transformed_groups_of_points.append(
@@ -695,6 +721,7 @@ class Controller:
             else:
                 pts = []
                 for p in obj.points:
+                    print(p)
                     pts.append(self.viewpoert_transform_point(p))
                 transformed_groups_of_points.append(
                     ViewportObjectRepresentation(name=obj.name,
@@ -725,15 +752,19 @@ class Controller:
         )
 
         objects_list = []
-        curve_step = 0.01
+        step = 0.01
         for obj in objects:
             if isinstance(obj, BezierCurve) or isinstance(obj, BSplineCurve):
                 # Switch the curve by its lines
-                objects_list.extend(obj.calculate_lines(curve_step))
+                objects_list.extend(obj.calculate_lines(step))
 
             elif isinstance(obj, Object3D):
                 # Switch object 3d by its wireframes
                 objects_list.extend(obj.get_wireframes())
+            
+            elif isinstance(obj, BicubicSurface):
+                # Switch bicubic surface by it wireframe
+                objects_list.append(obj.get_wireframe())
 
             else:
                 objects_list.append(obj)

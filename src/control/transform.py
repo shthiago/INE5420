@@ -5,7 +5,7 @@ from statistics import mean
 from copy import deepcopy
 
 import numpy as np
-from src.model.objects import Point3D, Line, Wireframe, BezierCurve, BezierCurveSetup, BSplineCurve, Object3D
+from src.model.objects import Point3D, Line, Wireframe, BezierCurve, BezierCurveSetup, BSplineCurve, Object3D, BicubicSurface, BicubicSetup
 
 
 def transform(points: List[Point3D], matrix: np.ndarray) -> List[Point3D]:
@@ -874,7 +874,6 @@ class Normalizer:
                           ) -> List[Union[Point3D, Line, Wireframe]]:
         '''Return objects in the normalized coordinates'''
         normalized_objects: List[Union[Point3D, Line, Wireframe]] = []
-
         for obj in objects:
             normalized_objects.append(self.normalize_object(obj))
 
@@ -892,14 +891,17 @@ class Normalizer:
         if isinstance(obj, Wireframe):
             return self._normalize_wireframe(obj)
 
-        raise TypeError(f'Invaldi type for normalization: {obj}')
+        # if isinstance(obj, BicubicSurface):
+        #     return self._normalize_bicubic_surface(obj)
+
+        raise TypeError(f'Invalid type for normalization: {obj}')
 
     def _normalize_point(self, point: Point3D) -> Point3D:
         '''Apply transformation to single point'''
         return transform([point], self._normalization_matrix)[0]
 
     def _normalize_line(self, line: Line) -> Line:
-        '''Apply normalizato to line'''
+        '''Apply normalization to line'''
         points = transform(line.points, self._normalization_matrix)
 
         new_line = deepcopy(line)
@@ -923,6 +925,20 @@ class Normalizer:
         new_wireframe.points = points
 
         return new_wireframe
+    
+    # def _normalize_bicubic_surface(self, surface: BicubicSurface) -> BicubicSurface:
+    #     '''Apply normalization to bicubic surface'''
+    #     points = transform(surface.points, self._normalization_matrix)
+
+    #     new_surface = deepcopy(surface)
+
+    #     if not isinstance(new_surface, BicubicSurface):
+    #         raise TypeError('Internal object is not Bicubi surface')
+
+    #     new_surface.points = points
+
+    #     return new_surface
+
 
 
 class ParalelProjection:
@@ -933,9 +949,9 @@ class ParalelProjection:
         self.VPN_end = VPN[1]
 
     def project(self, objects: Union[Point3D, Line, Wireframe, BezierCurve,
-                                     BSplineCurve, Object3D]
+                                     BSplineCurve, Object3D, BicubicSurface]
                 ) -> Union[Point3D, Line, Wireframe, BezierCurve,
-                           BSplineCurve, Object3D]:
+                           BSplineCurve, Object3D, BicubicSurface]:
         '''Apply project transformation over lsit of objects'''
         translate_to_origin = get_translation_matrix(
             desloc_x=-self.VRP.x,
@@ -975,7 +991,7 @@ class ParalelProjection:
                 projected_objects.append(new_obj)
 
             elif isinstance(obj, Wireframe) or \
-                    isinstance(obj, Object3D):
+                    isinstance(obj, Object3D) or isinstance(obj, BicubicSurface):
                 new_points = transform(obj.points, project_matrix)
                 new_obj = deepcopy(obj)
                 new_obj.points = new_points
@@ -1005,6 +1021,36 @@ class ParalelProjection:
                 new_curve.curves = new_setups
 
                 projected_objects.append(new_curve)
+            
+            # elif isinstance(obj, BicubicSurface):
+            #     new_setups = []
+            #     setup = obj.setup
+            #     points = [setup.P1, setup.P2, setup.P3, setup.P4,setup.P5, setup.P6, setup.P7, setup.P8,setup.P9, setup.P10,
+            #                      setup.P11, setup.P12,setup.P13, setup.P14, setup.P15, setup.P16]
+            #     new_points = transform(points, project_matrix)
+            #     new_setups.append(BicubicSetup(
+            #         P1=new_points[0],
+            #         P2=new_points[1],
+            #         P3=new_points[2],
+            #         P4=new_points[3],
+            #         P5=new_points[4],
+            #         P6=new_points[5],
+            #         P7=new_points[6],
+            #         P8=new_points[7],
+            #         P9=new_points[8],
+            #         P10=new_points[9],
+            #         P11=new_points[2],
+            #         P12=new_points[3],
+            #         P13=new_points[0],
+            #         P14=new_points[1],
+            #         P15=new_points[2],
+            #         P16=new_points[3]
+            #     ))
+
+            #     new_surface = deepcopy(obj)
+            #     new_surface.setups = new_setups
+
+            #     projected_objects.append(new_surface)
 
             else:
                 raise ValueError('Invalid object to project')
