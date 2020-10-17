@@ -103,17 +103,17 @@ class Controller:
         #     )
         # )
 
-        self.add_object_to_list(
-            BSplineCurve('Spline',
-                         control_points=[
-                             Point3D('_', x=0, y=0, z=0),
-                             Point3D('_', x=-100, y=200, z=0),
-                             Point3D('_', x=-200, y=0, z=0),
-                             Point3D('_', x=-300, y=-200, z=0),
-                             Point3D('_', x=-400, y=0, z=0),
-                             Point3D('_', x=-500, y=500, z=0),
-                         ])
-        )
+        # self.add_object_to_list(
+        #     BSplineCurve('Spline',
+        #                  control_points=[
+        #                      Point3D('_', x=0, y=0, z=0),
+        #                      Point3D('_', x=-100, y=200, z=0),
+        #                      Point3D('_', x=-200, y=0, z=0),
+        #                      Point3D('_', x=-300, y=-200, z=0),
+        #                      Point3D('_', x=-400, y=0, z=0),
+        #                      Point3D('_', x=-500, y=500, z=0),
+        #                  ])
+        # )
 
         self.add_object_to_list(
             BicubicSurface('bicubic',

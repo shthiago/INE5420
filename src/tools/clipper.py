@@ -83,7 +83,10 @@ class Clipper:
 
             elif isinstance(obj, Wireframe):
                 inside_window, new_objs = self._clip_wireframe(obj)
+                print(inside_window)
+                print(new_objs)
                 if inside_window and all([p.z > 1e-4 for p in obj.points]):
+                    print('inside is')
                     cliped_objects.extend(new_objs)
 
             else:
