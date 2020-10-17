@@ -1,15 +1,16 @@
 '''Cotroller class'''
 import sys
 import os
-from typing import List, Union, Tuple, Set
-from math import cos, sin, radians
+from typing import List, Union, Tuple
+from math import cos, sin, radians, tan
+from enum import Enum, auto
 
 from PyQt5.QtWidgets import (QApplication, QMessageBox,
                              QColorDialog, QFileDialog)
 from PyQt5.QtGui import QColor
 from loguru import logger
 
-from src.control.transform import Transformator, Normalizer, ParalelProjection
+from src.control.transform import Transformator, Normalizer, Projector
 from src.model import new_object_factory
 from src.model.objects import Point3D, Line, Wireframe, BezierCurve, BSplineCurve, Object3D
 from src.model.objects import ViewportObjectRepresentation, BezierCurveSetup
@@ -18,6 +19,11 @@ from src.tools.clipper import Clipper, ClipperSetup
 from src.view.main_window import MainWindow
 from src.view.dialog import NewObjectDialog, TransformationDialog
 from src.view.object_item import ObjectItem
+
+
+class _ProjectionType(Enum):
+    PARALEL = auto()
+    PERSPECTIVE = auto()
 
 
 class Controller:
@@ -31,6 +37,8 @@ class Controller:
 
         # Angle between the Vup vector and the world Y axis
         self._vup_angle_degrees = 0
+
+        self._proj_type = _ProjectionType.PARALEL
 
         # Init main interface
         self.app = QApplication(sys.argv)
@@ -56,7 +64,7 @@ class Controller:
         self.window_ymin = -300
         self.window_xmax = 300
         self.window_ymax = 300
-        self._vrp_z = 1000
+        self._vrp_z = 500
 
         # Point to be the second extreme of the VPN
         self._vpn_dir = Point3D('_vpn_direction', x=0, y=0, z=-1)
@@ -120,8 +128,8 @@ class Controller:
     @property
     def VRP(self) -> Point3D:
         '''Return window center'''
-        wcx = (self.window_xmax+self.window_xmin)/2
-        wcy = (self.window_ymax+self.window_ymin)/2
+        wcx = (self.window_xmax + self.window_xmin)/2
+        wcy = (self.window_ymax + self.window_ymin)/2
         return Point3D('VPN_start',
                        x=wcx,
                        y=wcy,
@@ -136,6 +144,7 @@ class Controller:
                        x=self._vpn_dir.x + vrp.x,
                        y=self._vpn_dir.y + vrp.y,
                        z=self._vpn_dir.z + vrp.z))
+
         return vpn
 
     def run(self):
@@ -269,6 +278,18 @@ class Controller:
         self.main_window.view_right_btn.clicked.connect(
             lambda: self._window_move_handler('right'))
 
+        self.main_window.z_plus_btn.clicked.connect(
+            lambda: self._modify_z('+')
+        )
+        self.main_window.z_minus_btn.clicked.connect(
+            lambda: self._modify_z('-')
+        )
+        self.main_window.paralel_radio_btn.pressed.connect(
+            lambda: self._set_proj_type(_ProjectionType.PARALEL)
+        )
+        self.main_window.perspective_radio_btn.pressed.connect(
+            lambda: self._set_proj_type(_ProjectionType.PERSPECTIVE)
+        )
         self.main_window.positive_rotate_x_btn.clicked.connect(
             lambda: self._pos_rotate_VPN('x'))
 
@@ -293,6 +314,34 @@ class Controller:
         self.main_window.open_transformation_dialog_action.triggered.connect(
             self._transformation_dialog
         )
+
+    def _set_proj_type(self, proj_type: _ProjectionType):
+        self._proj_type = proj_type
+
+        self._process_viewport()
+
+    def _modify_z(self, direction: str):
+        '''Increase or decrease Z of the window'''
+        if direction not in ['+', '-']:
+            raise ValueError(f'Invalid direction for modifying Z: {direction}')
+
+        try:
+            step = int(self.main_window.step_input.text())
+        except ValueError:
+            QMessageBox.information(
+                self.add_object_dialog,
+                'Error',
+                'Step value invalid',
+                QMessageBox.Ok
+            )
+            return
+
+        if direction == '+':
+            self._vrp_z += step
+        else:
+            self._vrp_z -= step
+
+        self._process_viewport()
 
     def _pos_rotate_VPN(self, axis: str):
         '''Modify VPN'''
@@ -667,9 +716,18 @@ class Controller:
         # grid = [gx, gy, gz]
 
         # to_project_objects = grid + self.display_file
-        to_project_objects = self.display_file
-        projector = ParalelProjection(self.VPN)
-        to_normalize_objects = projector.project(to_project_objects)
+        projector = Projector(self.VPN)
+        projector.set_objects(self.display_file)
+        if self._proj_type == _ProjectionType.PARALEL:
+            to_normalize_objects = projector.project_paralel()
+
+        else:  # self._proj_type == _ProjectionType.PERSPECTIVE:
+            opening_angle = 150
+            window_width = (self.window_xmax - self.window_xmin)
+            d_value = window_width / tan(radians(opening_angle/2))
+
+            to_normalize_objects = projector.project_perspective(
+                d_value=d_value)
 
         normalized_display_file = self.get_normalized_display_file(
             to_normalize_objects)
@@ -709,16 +767,11 @@ class Controller:
                                     ) -> List[Union[Point3D, Line, Wireframe]]:
         '''Take internal Vup vector and rotate grid and internal list of objects'''
 
-        window_center_x = (self.window_xmax + self.window_xmin)/2
-        window_center_y = (self.window_ymax + self.window_ymin)/2
         window_width = self.window_ymax - self.window_ymin
         window_height = self.window_xmax - self.window_xmin
 
         normalizer = Normalizer(
-            Point3D('_wc',
-                    x=window_center_x,
-                    y=window_center_y,
-                    z=0),
+            self.VRP,
             window_height,
             window_width,
             vup_angle=self._vup_angle_degrees
