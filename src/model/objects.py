@@ -396,8 +396,6 @@ class Object3D(BaseNamedColoredObject):
     
     def as_list_of_tuples(self) -> List[Tuple[int, int, int]]:
         '''Return points as list of tuples'''
-        print('list of tuples')
-        print(self.points)
         return [p.as_tuple() for p in self.points]
     
     def describe_export_with(self, points: List[Tuple[float, float, float]], colors: List[QColor]) -> List[str]:
@@ -446,7 +444,7 @@ class BicubicSurface(BaseNamedColoredObject):
         self.thickness = thickness
 
         self.setup = setup
-        self.points = self.calc_superficie(0.1,0.1)
+        self.points = self.calc_superficie(0.01,0.01)
     
     def create_matrices(self):
         setup = self.setup
@@ -499,22 +497,20 @@ class BicubicSurface(BaseNamedColoredObject):
 
             p = Point3D('__', x1,y1,z1)
             points.append(p)
-        
+
         return points #, xss, yss, zss
     
-    def get_wireframe(self) -> List[Wireframe]:
+    def get_lines(self) -> List[Line]:
         '''Connect the points for each face and return one wireframe'''
-
+        lines = []
         points = self.points
 
-        wireframe = Wireframe(
-                name='__',
-                points=points,
-                thickness=self.thickness
-            )
-        wireframe.color = self.color
+        for i in range(0,14):
+            line = Line("_", points[i], points[i+1])
+            line.color = self.color
+            lines.append(line)
         
-        return wireframe
+        return lines
 
 
 

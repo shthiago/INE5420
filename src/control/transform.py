@@ -1,6 +1,6 @@
 '''Transformations for objects'''
 from typing import List, Union, Tuple
-from math import cos, sin, radians, atan, degrees, asin, sqrt
+from math import cos, sin, radians, atan, degrees, asin, sqrt, acos
 from statistics import mean
 from copy import deepcopy
 
@@ -15,12 +15,12 @@ def transform(points: List[Point3D], matrix: np.ndarray) -> List[Point3D]:
     for point in points:
         np_point = np.array([point.x, point.y, point.z, 1])
         new_point = np_point.dot(matrix)
-
+        w = new_point[-1]
         new_points.append(Point3D(
             name=point.name,
-            x=new_point[0],
-            y=new_point[1],
-            z=new_point[2]
+            x=new_point[0]/w,
+            y=new_point[1]/w,
+            z=new_point[2]/w
         ))
 
     return new_points
@@ -941,25 +941,28 @@ class Normalizer:
 
 
 
-class ParalelProjection:
+class Projector:
     '''Class to make transformations over objects based on a VPN'''
 
     def __init__(self, VPN: Tuple[Point3D, Point3D]):
         self.VRP = VPN[0]
         self.VPN_end = VPN[1]
+        self._objects = []
 
-    def project(self, objects: Union[Point3D, Line, Wireframe, BezierCurve,
-                                     BSplineCurve, Object3D, BicubicSurface]
-                ) -> Union[Point3D, Line, Wireframe, BezierCurve,
-                           BSplineCurve, Object3D, BicubicSurface]:
-        '''Apply project transformation over lsit of objects'''
-        translate_to_origin = get_translation_matrix(
+    def set_objects(self, objects: Union[Point3D, Line, Wireframe,
+                                         BezierCurve, BSplineCurve, Object3D]):
+        self._objects = objects
+
+    def get_paralel_transformation_matrix(self) -> np.array:
+        '''Create the matrix to translate VRP to origin and align VPN with Z
+        '''
+        translate_vrp_to_origin = get_translation_matrix(
             desloc_x=-self.VRP.x,
             desloc_y=-self.VRP.y,
             desloc_z=-self.VRP.z)
 
-        matrixes = [translate_to_origin]
-        vpn_translated = transform([self.VPN_end], translate_to_origin)[0]
+        matrixes = [translate_vrp_to_origin]
+        vpn_translated = transform([self.VPN_end], translate_vrp_to_origin)[0]
 
         angle_with_zy = degrees(asin(vpn_translated.x))
 
@@ -968,15 +971,21 @@ class ParalelProjection:
 
         angle_with_zx = degrees(asin(vpn_translated.y))
         #  if negative z, correct the angle
-        if vpn_translated.z < 1e-4:
-            angle_with_zx = 180 + angle_with_zx
+        if vpn_translated.z < -1e-4:
+            angle_with_zx = 180 - angle_with_zx
 
         matrixes.append(
             get_ry_rotation_matrix_from_degrees(-angle_with_zx))
 
-        project_matrix = concat_transformation_matrixes(matrixes)
+        return concat_transformation_matrixes(matrixes)
+
+    def apply_matrix_to_objects(self, project_matrix: np.array
+                                ) -> Union[Point3D, Line, Wireframe,
+                                           BezierCurve,
+                                           BSplineCurve, Object3D]:
+        '''Apply matrix to intern list of objects'''
         projected_objects = []
-        for obj in objects:
+        for obj in self._objects:
             if isinstance(obj, Point3D):
                 new_point = transform([obj], project_matrix)[0]
                 new_point.color = obj.color
@@ -1056,3 +1065,44 @@ class ParalelProjection:
                 raise ValueError('Invalid object to project')
 
         return projected_objects
+
+    def get_perspective_transformation_matrix(self, d_value: int) -> np.array:
+        '''Get perspective transformation matrix'''
+        paralel = self.get_paralel_transformation_matrix()
+
+        z_offset = get_translation_matrix(
+            0, 0, d_value)  # Putting COP in origin
+
+        m_per = np.array([[1, 0, 0, 0],
+                          [0, 1, 0, 0],
+                          [0, 0, 1, 1/d_value],
+                          [0, 0, 0, 0]])
+
+        perspective_transformation = concat_transformation_matrixes(
+            [paralel, z_offset, m_per])
+
+        return perspective_transformation
+
+    def project_paralel(self) -> Union[Point3D, Line, Wireframe, BezierCurve,
+                                       BSplineCurve, Object3D]:
+        '''Apply project transformation over intern list objects'''
+        matrix = self.get_paralel_transformation_matrix()
+        projected = self.apply_matrix_to_objects(matrix)
+        # trasnlate back
+        self._objects = projected
+        return self.apply_matrix_to_objects(get_translation_matrix(
+            desloc_x=self.VRP.x,
+            desloc_y=self.VRP.y,
+            desloc_z=self.VRP.z))
+
+    def project_perspective(self, d_value: int) -> Union[Point3D, Line, Wireframe, BezierCurve,
+                                                         BSplineCurve, Object3D]:
+        '''Apply project transformation over intern list of objects'''
+        matrix = self.get_perspective_transformation_matrix(d_value)
+        projected = self.apply_matrix_to_objects(matrix)
+        # trasnlate back
+        self._objects = projected
+        return self.apply_matrix_to_objects(get_translation_matrix(
+            desloc_x=self.VRP.x,
+            desloc_y=self.VRP.y,
+            desloc_z=self.VRP.z))
