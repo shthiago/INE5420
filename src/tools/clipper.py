@@ -65,12 +65,12 @@ class Clipper:
         '''
 
         cliped_objects: List[Union[Point3D, Line, Wireframe]] = []
-        print('objects to be clipped')
-        print(objects)
+        # print('objects to be clipped')
+        # print(objects)
         for obj in objects:
-            print()
-            print('Object being clipped')
-            print(obj)
+            # print()
+            # print('Object being clipped')
+            # print(obj)
             if isinstance(obj, Point3D):
                 inside_window, new_obj = self._clip_point(obj)
                 if inside_window and obj.z > -1e-4:
@@ -83,11 +83,12 @@ class Clipper:
 
             elif isinstance(obj, Wireframe):
                 inside_window, new_objs = self._clip_wireframe(obj)
-                print(inside_window)
-                print(new_objs)
-                print(obj.points)
+                # print(inside_window)
+                # print(new_objs)
+                # print(obj.points)
+                
                 if inside_window and all([p.z > -1e-4 for p in obj.points]):
-                    print('inside is')
+                    # print('inside is')
                     cliped_objects.extend(new_objs)
 
             else:

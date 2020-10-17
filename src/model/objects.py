@@ -444,7 +444,7 @@ class BicubicSurface(BaseNamedColoredObject):
         self.thickness = thickness
 
         self.setup = setup
-        self.points = self.calc_superficie(0.01,0.01)
+        self.points = self.calc_superficie(0.1,0.1)
     
     def create_matrices(self):
         setup = self.setup
@@ -494,9 +494,8 @@ class BicubicSurface(BaseNamedColoredObject):
                 yss.append(y1)
                 z1 = self.calc_z(i,r, mb, gbz)
                 zss.append(z1)
-
-            p = Point3D('__', x1,y1,z1)
-            points.append(p)
+                p = Point3D('__', x1,y1,z1)
+                points.append(p)
 
         return points #, xss, yss, zss
     
@@ -504,6 +503,7 @@ class BicubicSurface(BaseNamedColoredObject):
         '''Connect the points for each face and return one wireframe'''
         lines = []
         points = self.points
+        len(points)
 
         for i in range(0,14):
             line = Line("_", points[i], points[i+1])

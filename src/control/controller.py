@@ -763,8 +763,8 @@ class Controller:
 
         transformed_groups_of_points: List[ViewportObjectRepresentation] = []
 
-        print('clipped_normalized_display_file')
-        print()
+        # print('clipped_normalized_display_file')
+        # print()
 
         for obj in clipped_normalized_display_file:
             if isinstance(obj, Point3D):
@@ -779,7 +779,7 @@ class Controller:
             else:
                 pts = []
                 for p in obj.points:
-                    print(p)
+                    # print(p)
                     pts.append(self.viewpoert_transform_point(p))
                 transformed_groups_of_points.append(
                     ViewportObjectRepresentation(name=obj.name,
