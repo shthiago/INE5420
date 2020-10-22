@@ -8,6 +8,12 @@ import numpy as np
 from PyQt5.QtGui import QColor
 
 
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
+
+
 class BaseNamedColoredObject:
     '''Base class for objects'''
 
@@ -470,13 +476,29 @@ class BicubicSurface(BaseNamedColoredObject):
         return np.array([t**3, t**2, t, 1])
     
     def calc_x(self, s1,t1,mb,gbx):
-        return (((self.matrix_s(s1).dot(mb)).dot(gbx)).dot((np.transpose(mb)))).dot((np.transpose(self.matrix_t(t1))))
+        #s(s1)*mb*Gbx*(mb.T)*(t(t1).T)
+        x1 = np.matmul(self.matrix_s(s1), mb)
+        x2 = np.matmul(x1, gbx)
+        x3 = np.matmul(x2,np.transpose(mb))
+        x4 = np.matmul(x3, np.transpose(self.matrix_t(t1)))
+        return x4
+
     
     def calc_y(self, s1,t1,mb,gby):
-        return (((self.matrix_s(s1).dot(mb)).dot(gby)).dot((np.transpose(mb)))).dot((np.transpose(self.matrix_t(t1))))
+        #s(s1)*mb*Gby*(mb.T)*(t(t1).T)
+        y1 = np.matmul(self.matrix_s(s1), mb)
+        y2 = np.matmul(y1, gby)
+        y3 = np.matmul(y2,np.transpose(mb))
+        y4 = np.matmul(y3, np.transpose(self.matrix_t(t1)))
+        return y4
     
     def calc_z(self, s1,t1,mb,gbz):
-        return (((self.matrix_s(s1).dot(mb)).dot(gbz)).dot((np.transpose(mb)))).dot((np.transpose(self.matrix_t(t1))))
+        #s(s1)*mb*Gbz*(mb.T)*(t(t1).T)
+        z1 = np.matmul(self.matrix_s(s1), mb)
+        z2 = np.matmul(z1, gbz)
+        z3 = np.matmul(z2,np.transpose(mb))
+        z4 = np.matmul(z3, np.transpose(self.matrix_t(t1)))
+        return z4
     
     def calc_superficie(self, s,t):
         mb =  [[-1,3,-3,1], [3,-6,3,0],[-3,3,0,0],[1,0,0,0]]
@@ -496,6 +518,18 @@ class BicubicSurface(BaseNamedColoredObject):
                 zss.append(z1)
                 p = Point3D('__', x1,y1,z1)
                 points.append(p)
+        
+        print(xss)
+        print(yss)
+        print(zss)
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        ax.plot(xss, yss, zss, label='parametric curve')
+        ax.legend()
+
+        plt.show()
 
         return points #, xss, yss, zss
     
