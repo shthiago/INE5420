@@ -53,6 +53,10 @@ class NewObjectDialog(QtWidgets.QDialog):
         self._3dobject_tab = _3dObjectTab()
         self.tab_panel.addTab(self._3dobject_tab, "3D Object")
 
+        # Add 3D object
+        self._bicub_tab = _BicubicTab()
+        self.tab_panel.addTab(self._bicub_tab, "Bicubic")
+
         self.tab_panel.setCurrentIndex(0)
 
     def reset_values(self):
@@ -743,6 +747,85 @@ class BSplineTab(QtWidgets.QDialog):
         self.points_model.clear()
         self.points_list.clear()
 
+class _BicubicTab(QtWidgets.QDialog):
+    def __init__(self):
+        super().__init__()
+        self.points_list = []
+
+        self.numeric_validator = QtGui.QIntValidator(-10000, 10000)
+
+        self.points_view = QtWidgets.QListView(self)
+        self.points_view.setGeometry(QtCore.QRect(160, 10, 200, 150))
+
+        self.points_model = QtGui.QStandardItemModel()
+        self.points_view.setModel(self.points_model)
+
+        self.x_lbl_pt = QtWidgets.QLabel(self)
+        self.x_lbl_pt.setGeometry(QtCore.QRect(30, 10, 21, 16))
+        self.x_lbl_pt.setText("X")
+
+        self.y_lbl_pt = QtWidgets.QLabel(self)
+        self.y_lbl_pt.setGeometry(QtCore.QRect(30, 50, 21, 16))
+        self.y_lbl_pt.setText("Y")
+
+        self.z_lbl_pt = QtWidgets.QLabel(self)
+        self.z_lbl_pt.setGeometry(QtCore.QRect(30, 90, 21, 16))
+        self.z_lbl_pt.setText("Z")
+
+        self.x_coord_pt_input = QtWidgets.QLineEdit(self)
+        self.x_coord_pt_input.setGeometry(QtCore.QRect(50, 10, 41, 23))
+        self.x_coord_pt_input.setValidator(self.numeric_validator)
+
+        self.y_coord_pt_input = QtWidgets.QLineEdit(self)
+        self.y_coord_pt_input.setGeometry(QtCore.QRect(50, 50, 41, 23))
+        self.y_coord_pt_input.setValidator(self.numeric_validator)
+
+        self.z_coord_pt_input = QtWidgets.QLineEdit(self)
+        self.z_coord_pt_input.setGeometry(QtCore.QRect(50, 90, 41, 23))
+        self.z_coord_pt_input.setValidator(self.numeric_validator)
+
+        self.add_point_btn = QtWidgets.QPushButton(self)
+        self.add_point_btn.setGeometry(QtCore.QRect(30, 130, 100, 40))
+        self.add_point_btn.setText('Add point')
+
+        self.add_point_btn.clicked.connect(self.__add_input_values_to_list)
+
+    def __add_input_values_to_list(self):
+
+        try:
+            x = int(self.x_coord_pt_input.text())
+            y = int(self.y_coord_pt_input.text())
+            z = int(self.z_coord_pt_input.text())
+        except ValueError as e:
+            QtWidgets.QMessageBox.information(
+                self,
+                'Error while creating point',
+                str(e),
+                QtWidgets.QMessageBox.Ok
+            )
+            return
+
+        self.reset_values
+        self.points_list.append((x, y, z))
+        item = QtGui.QStandardItem(f'({x}, {y}, {z})')
+        item.setEditable(False)
+        self.points_model.appendRow(item)
+        self.x_coord_pt_input.clear()
+        self.y_coord_pt_input.clear()
+        self.z_coord_pt_input.clear()
+
+    def reset_values(self):
+        """
+        Reset inputs to empty value
+        """
+
+        self.x_coord_pt_input.clear()
+        self.y_coord_pt_input.clear()
+        self.z_coord_pt_input.clear()
+        self.points_model.clear()
+        self.points_list.clear()
+
+
 
 # Transformation dialog items
 class TransformationDialog(QtWidgets.QDialog):
@@ -817,7 +900,6 @@ class TransformationDialog(QtWidgets.QDialog):
         self.rotate_tab.reset_values()
         self.move_tab.reset_values()
 
-
 class MoveTab(QtWidgets.QWidget):
     """
     Tab for input values to move a object
@@ -878,7 +960,6 @@ class MoveTab(QtWidgets.QWidget):
         self.x_input.clear()
         self.y_input.clear()
         self.z_input.clear()
-
 
 class RotateTab(QtWidgets.QWidget):
     """

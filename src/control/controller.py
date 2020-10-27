@@ -123,27 +123,27 @@ class Controller:
         #                  ])
         # )
 
-        self.add_object_to_list(
-            BicubicSurface('bicubic',
-                         setup=BicubicSetup(
-                             Point3D('_', x=0, y=0, z=0),
-                             Point3D('_', x=-100, y=0, z=0),
-                             Point3D('_', x=-200, y=0, z=0),
-                             Point3D('_', x=-300, y=0, z=0),
-                             Point3D('_', x=-400, y=0, z=0),
-                             Point3D('_', x=-500, y=0, z=0),
-                             Point3D('_', x=0, y=100, z=0),
-                             Point3D('_', x=0, y=200, z=0),
-                             Point3D('_', x=0, y=300, z=0),
-                             Point3D('_', x=0, y=-400, z=0),
-                             Point3D('_', x=0, y=500, z=0),
-                             Point3D('_', x=0, y=0, z=100),
-                             Point3D('_', x=0, y=0, z=200),
-                             Point3D('_', x=0, y=-0, z=300),
-                             Point3D('_', x=0, y=0, z=400),
-                             Point3D('_', x=0, y=0, z=500),
-                            ))
-        )
+        # self.add_object_to_list(
+        #     BicubicSurface('bicubic',
+        #                  setup=BicubicSetup(
+        #                      Point3D('_', x=0, y=0, z=0),
+        #                      Point3D('_', x=-100, y=0, z=0),
+        #                      Point3D('_', x=-200, y=0, z=0),
+        #                      Point3D('_', x=-300, y=0, z=0),
+        #                      Point3D('_', x=-400, y=0, z=0),
+        #                      Point3D('_', x=-500, y=0, z=0),
+        #                      Point3D('_', x=0, y=100, z=0),
+        #                      Point3D('_', x=0, y=200, z=0),
+        #                      Point3D('_', x=0, y=300, z=0),
+        #                      Point3D('_', x=0, y=400, z=0),
+        #                      Point3D('_', x=0, y=500, z=0),
+        #                      Point3D('_', x=0, y=0, z=100),
+        #                      Point3D('_', x=0, y=0, z=200),
+        #                      Point3D('_', x=0, y=0, z=300),
+        #                      Point3D('_', x=0, y=0, z=400),
+        #                      Point3D('_', x=0, y=0, z=500),
+        #                     ))
+        # )
 
         self._process_viewport()
 

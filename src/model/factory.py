@@ -3,8 +3,8 @@ from typing import List
 from PyQt5.QtWidgets import QWidget
 
 from src.model.objects import (Point3D, Line, Wireframe,
-                               BezierCurve, BezierCurveSetup, BSplineCurve, Object3D)
-from src.view.dialog import LineTab, PointTab, CurveTab, WireframeTab, BSplineTab, _3dObjectTab
+                               BezierCurve, BezierCurveSetup, BSplineCurve, Object3D, BicubicSetup, BicubicSurface)
+from src.view.dialog import LineTab, PointTab, CurveTab, WireframeTab, BSplineTab, _3dObjectTab, _BicubicTab
 
 
 def create_line(name: str, tab: LineTab) -> Line:
@@ -94,6 +94,21 @@ def create_3dobject(obj_name: str, tab: _3dObjectTab) -> Object3D:
 
     return Object3D(name=obj_name, points=points, faces=faces)
 
+def create_bicubicSurface(obj_name: str, tab: _BicubicTab) -> BicubicSurface:
+    '''Take 3D object tab and create the 3d object'''
+    points = []
+
+    for i, point in enumerate(tab.points_list):
+        x, y, z = point
+        point = Point3D('Po' + str(i).zfill(3), x, y, z)
+        points.append(point)
+
+    setup = BicubicSetup(points[0],points[1],points[2],points[3],points[4],points[5],points[6],
+                        points[7],points[8],points[9],points[10],points[11],points[12],points[13],
+                        points[14],points[15])
+
+    return BicubicSurface(name=obj_name, setup=setup)
+
 
 def new_object_factory(obj_name: str, tab_name: str, tab: QWidget):
     """
@@ -118,6 +133,8 @@ def new_object_factory(obj_name: str, tab_name: str, tab: QWidget):
             return status, create_bspline(obj_name, tab)
         elif tab_name == '3D Object':
             return status, create_3dobject(obj_name, tab)
+        elif tab_name == 'Bicubic':
+            return status, create_bicubicSurface(obj_name, tab)
 
         raise ValueError(f'Invalid tab name: {tab_name}')
 
